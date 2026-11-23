@@ -1,0 +1,20 @@
+# Passwords: each unit's secrets.h stays on your computer
+secrets.h
+# ...except the preview tool's placeholder, which holds no real passwords
+!display-unit/host-tests/preview/stubs/secrets.h
+
+# Build output
+.pio/
+build/
+*.o
+display-unit/host-tests/preview/out/
+
+# Editors and Python
+.vscode/
+__pycache__/
+*.pyc
+
+# Camera pictures saved while testing (calibration.json is kept: it belongs to your car)
+road-*.png
+calibration-check.png
+camera-unit/esp32-cam/host-tests/cases/

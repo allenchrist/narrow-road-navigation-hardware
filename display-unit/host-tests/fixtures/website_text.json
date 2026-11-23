@@ -1,0 +1,98 @@
+{
+ "NONE": {
+  "title": "",
+  "detail": "",
+  "note": "",
+  "steps": "no"
+ },
+ "ENTRY_WAIT+entrance": {
+  "title": "Wait at the entrance",
+  "detail": "The car is about to enter from the other end",
+  "note": "You're 3rd in line · 2 cars ahead of you, at the other end",
+  "steps": "no"
+ },
+ "GIVE_WAY": {
+  "title": "Give way",
+  "detail": "Pull over and let the priority vehicle pass",
+  "note": "The priority vehicle has right of way",
+  "steps": "yes"
+ },
+ "ROAD_CLEAR": {
+  "title": "Road clear",
+  "detail": "You can continue",
+  "note": "The priority vehicle has passed",
+  "steps": "yes"
+ },
+ "ENTRY_GO+entrance": {
+  "title": "Go ahead",
+  "detail": "The narrow road ahead is clear",
+  "note": "",
+  "steps": "no"
+ },
+ "IN_NARROW_ROAD": {
+  "title": "Narrow road",
+  "detail": "Proceed with caution",
+  "note": "",
+  "steps": "no"
+ },
+ "VEHICLE_WAITING": {
+  "title": "Vehicle waiting",
+  "detail": "Other vehicles is waiting for you to pass",
+  "note": "",
+  "steps": "no"
+ },
+ "RIGHT_OF_WAY": {
+  "title": "You have right of way",
+  "detail": "Continue, others are giving way to you",
+  "note": "The car should give way",
+  "steps": "no"
+ },
+ "VEHICLE_ENTERING": {
+  "title": "Vehicle about to enter",
+  "detail": "Slow down, the priority vehicle is approaching this road",
+  "note": "",
+  "steps": "no"
+ },
+ "ENTRY_PRIORITY+entrance": {
+  "title": "Vehicle in the road",
+  "detail": "The car has been told you're coming",
+  "note": "",
+  "steps": "no"
+ },
+ "NONE+mountain": {
+  "title": "",
+  "detail": "",
+  "note": "",
+  "steps": "no"
+ },
+ "BEND_STOP+mountain": {
+  "title": "Stop before the bend",
+  "detail": "The bus is coming from the opposite direction",
+  "note": "Wait at the marked point · Hairpin 1 · Yercaud ghat road",
+  "steps": "no"
+ },
+ "BEND_CLEAR+mountain": {
+  "title": "Bend clear",
+  "detail": "Go ahead",
+  "note": "Hairpin 1 · Yercaud ghat road",
+  "steps": "no"
+ },
+ "BEND_GO+mountain": {
+  "title": "Take the bend",
+  "detail": "The car is waiting for you on the other side",
+  "note": "Hairpin 1 · Yercaud ghat road",
+  "steps": "no"
+ },
+ "BEND_NO_OVERTAKE+mountain": {
+  "title": "Don't overtake",
+  "detail": "The bus ahead is turning at the bend",
+  "note": "Hairpin 1 · Yercaud ghat road",
+  "steps": "no"
+ },
+ "BEND_KEEP_LEFT+mountain": {
+  "title": "Vehicle round the bend",
+  "detail": "A vehicle is coming from the opposite direction. Keep left",
+  "note": "Hairpin 1 · Yercaud ghat road",
+  "steps": "no"
+ }
+}

@@ -1,0 +1,49 @@
+name: Checks
+
+on: [push, pull_request]
+
+jobs:
+  firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ hashFiles('**/platformio.ini') }}
+      - run: pip install platformio
+      - name: Use the example secrets
+        run: |
+          for unit in main-unit display-unit camera-unit/esp32-cam; do
+            cp $unit/include/secrets.example.h $unit/include/secrets.h
+          done
+      - run: pio run -d main-unit
+      - run: pio run -d display-unit
+      - run: pio run -d camera-unit/esp32-cam
+
+      - name: Logic tests on the runner
+        run: |
+          g++ -std=c++17 -Wall -Imain-unit/src main-unit/host-tests/test_narrow_detector.cpp \
+            main-unit/src/narrow_detector.cpp -o narrow && ./narrow
+          g++ -std=c++17 -Wall -Idisplay-unit/src \
+            -Idisplay-unit/.pio/libdeps/esp32-8048s050/ArduinoJson/src \
+            display-unit/host-tests/test_display_logic.cpp display-unit/src/fleet.cpp \
+            display-unit/src/alert_text.cpp -o display && ./display display-unit/host-tests/fixtures
+
+  camera:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy opencv-python-headless
+      - run: python camera-unit/python/tests/test_width.py
+      - name: The ESP32-CAM's C++ gives the same widths as Python
+        run: |
+          python camera-unit/python/tests/export_cases.py cases
+          g++ -std=c++17 -Wall -Icamera-unit/esp32-cam/src camera-unit/esp32-cam/host-tests/test_width_core.cpp \
+            camera-unit/esp32-cam/src/width_core.cpp -o width && ./width cases
