@@ -4,7 +4,7 @@ The car's own hardware for [Narrow Road Navigation](https://github.com/allenchri
 
 | Today | In hardware | Folder |
 |---|---|---|
-| Android app ([VehicleSensorModule](https://github.com/allenchrist/VehicleSensorModule)) | **Main unit**: ESP32-S3, GPS, compass/IMU | `main-unit/` |
+| Android app ([VehicleSensorModule](https://github.com/allenchrist/VehicleSensorModule)) | **Main unit**: ESP32, GPS, compass | `main-unit/` |
 | Web dashboard | **Display unit**: 5-inch ESP32-S3 touch screen | `display-unit/` |
 | (new) | **Camera unit**: measures the road's width | `camera-unit/` |
 
@@ -16,7 +16,7 @@ It talks to the **same server, unchanged**. To the server, the main unit is just
   │  Camera unit ── road widths (UDP broadcast) ──┐           │
   │  ESP32-CAM, or webcam / phone + width.py      ▼           │
   │                                         Main unit         │
-  │                                     ESP32-S3, GPS, IMU    │
+  │                                   ESP32, GPS, compass     │
   │  Display unit (5-inch screen)                 │           │
   └──────────────┬────────────────────────────────┼───────────┘
                  │            Wi-Fi: phone hotspot │
@@ -43,37 +43,74 @@ The main unit and display log in with **the same account**, made in the Android 
 
 ## Parts
 
-| Part | Model the code is written for | Used for |
-|---|---|---|
-| Main controller | ESP32-S3 DevKitC-1 (any ESP32-S3 board works) | Runs the main unit |
-| GPS | u-blox NEO-M8N or NEO-M9N (any NMEA GPS works) | Position, speed, direction of travel |
-| IMU | BNO085 (or BNO055, chosen in `config.h`) | Heading, acceleration, rotation |
-| Display | 5-inch 800×480 ESP32-S3 board, **ESP32-8048S050** (capacitive touch) | The car screen |
-| Camera | ESP32-CAM (AI-Thinker), or a USB webcam or phone camera with `width.py` | Road width |
-| Power | Automotive 12 V to 5 V 3 A buck converter, fuse | Power from the car socket |
+| Part | What's used | Status | Used for |
+|---|---|---|---|
+| Main controller | Ordinary **ESP32 DevKit** (ESP32-WROOM-32). An ESP32-S3 DevKitC-1 also works | Have it | Runs the main unit |
+| GPS | **NEO-6M** module (any NMEA GPS works) | Have it | Position, speed, direction of travel |
+| Heading sensor | **GY-271 compass** (QMC5883L). A BNO085 or BNO055 also works, chosen in `config.h` | Have it | Heading |
+| Breadboard, jumper wires | | Have them | Joining it all up without soldering |
+| Battery | 4 × 3.7 V Li-ion cells | Have them, but see [Power](#power) | Later: power away from USB |
+| Display | 5-inch 800×480 ESP32-S3 board, **ESP32-8048S050** (capacitive touch) | Not bought yet: the website dashboard shows the alerts meanwhile | The car screen |
+| Camera | A phone with **IP Webcam** or **DroidCam**, and a laptop running `width.py`. Or an ESP32-CAM | Using the phone | Road width |
+
+A compass measures only direction, not acceleration or rotation, so those are sent to the server as 0. The server and dashboard don't need them.
 
 ## Wiring
 
-**Main unit (ESP32-S3 DevKitC-1).** Pins are set in `main-unit/include/config.h`.
+**Main unit (ordinary ESP32 DevKit).** Plug the ESP32 into the breadboard across the middle gap. It is so wide that only one side's pins get a free hole beside them, so put the side with **3V3, GND, D15 ... D23** on the side with the free holes. Every wire below goes to that side. Run 3V3 to the breadboard's **+** rail and GND to its **−** rail, and power both modules from the rails. Pins are set in `main-unit/include/config.h`.
 
-| Part | Pin on the part | ESP32-S3 pin |
+| Part | Pin on the part | ESP32 pin |
 |---|---|---|
-| GPS | VCC | 5V (or 3V3 if the module says 3.3 V only) |
-| GPS | GND | GND |
-| GPS | TX | GPIO 18 |
-| GPS | RX | GPIO 17 |
-| BNO085 / BNO055 | VIN | 3V3 |
-| BNO085 / BNO055 | GND | GND |
-| BNO085 / BNO055 | SDA | GPIO 8 |
-| BNO085 / BNO055 | SCL | GPIO 9 |
+| NEO-6M GPS | VCC | 3V3, through the + rail (VIN, 5 V, also works if you can reach it) |
+| NEO-6M GPS | GND | GND, through the − rail |
+| NEO-6M GPS | TX | GPIO 16 (may be printed RX2) |
+| NEO-6M GPS | RX | GPIO 17 (may be printed TX2) |
+| GY-271 compass | VCC | 3V3, through the + rail |
+| GY-271 compass | GND | GND, through the − rail |
+| GY-271 compass | SDA | GPIO 21 |
+| GY-271 compass | SCL | GPIO 22 |
+| GY-271 compass | DRDY | not used, leave it empty |
+
+TX goes to the other side's RX: the GPS *talks* on its TX, and the ESP32 *listens* on GPIO 16. If the status line says `No data from the GPS`, swap the two wires on GPIO 16 and 17 first.
+
+Keep the compass a hand's width or more from the GPS module and its antenna, the USB cable and anything steel: they all bend the magnetic field it measures.
+
+**Main unit (ESP32-S3 DevKitC-1)**, if you use one instead: pick the `esp32-s3` env in PlatformIO. GPS TX → GPIO 18, GPS RX → GPIO 17, sensor SDA → GPIO 8, SCL → GPIO 9, power from 3V3 and GND as above.
 
 **Display unit.** Nothing to wire: power it through its USB-C port. If yours is a different board, put its pins in `display-unit/include/board.h`; nothing else changes.
 
 **ESP32-CAM.** 5V and GND only. It has no USB port: upload through an ESP32-CAM-MB board (it plugs underneath), or a USB-serial adapter with GPIO 0 joined to GND while it resets.
 
-**Power in the car.** 12 V socket → fuse → buck converter → 5 V to each unit. A car's "12 V" swings from 9 to 16 V with spikes when the engine starts, so use an automotive-rated converter.
+## Power
+
+**For now, power the ESP32 from USB only**: the laptop, a phone charger, or a USB power bank (a power bank is the easy way to take it into the car or outdoors). USB also powers the GPS and compass, through the ESP32's 3V3 pin. Nothing else is needed.
+
+**The four Li-ion cells: don't connect them yet.** Without a charger and protection board they are not safe to use:
+
+- **Never** join a cell straight to 3V3 (a full cell is 4.2 V; that pin takes at most 3.6 V) or to VIN (3.7 V is too little for the ESP32's regulator, so it resets at random).
+- **Never** wire the four in series (up to 16.8 V). It can burn out the ESP32's regulator.
+- Don't short a cell's ends, and don't charge them on anything not made for Li-ion.
+
+**The safe one-cell setup, later.** Buy two cheap modules (together about ₹100 to ₹150):
+
+```
+one cell ── TP4056 charger board ── MT3608 boost board ── ESP32 VIN and GND
+            (with protection,       (set to 5.0 V)
+             USB-C)
+```
+
+1. **TP4056 with protection** (it has a second small chip, DW01, and pins marked B+ B− OUT+ OUT−). The cell goes on B+ and B−, with red to B+. It charges the cell from USB and cuts off before the cell is run too flat.
+2. **MT3608 boost** from OUT+ and OUT−. **Before** joining it to the ESP32, turn its little screw while measuring its output with a multimeter until it reads **5.0 V**. New boards often come set much higher.
+3. Its output goes to the ESP32's **VIN** and **GND**.
+4. Don't plug in USB while the battery is connected. Unplug the battery to upload code.
+
+Use one cell, in a proper 18650 holder, rather than loose cells held with tape. Keep the other three for spares.
+
+**In the car, later.** 12 V socket → fuse → buck converter → 5 V to each unit. A car's "12 V" swings from 9 to 16 V with spikes when the engine starts, so use an automotive-rated converter. A USB car charger is the simplest version of this.
 
 ## Setting up
+
+**New to hardware?** Follow [docs/BUILD_GUIDE.md](docs/BUILD_GUIDE.md): every step from wiring the breadboard to the car on the live map.
 
 You need [VS Code](https://code.visualstudio.com) with the **PlatformIO** extension, and the phone hotspot on.
 
@@ -85,7 +122,11 @@ For **each** of `main-unit`, `display-unit` and `camera-unit/esp32-cam`:
 
 The first build downloads the ESP32 tools and takes several minutes.
 
-Everything you might change is in each unit's `include/config.h`: the server address, pins, which IMU, timings, and the narrow-road rules. To use a server on your laptop instead of Render, set `SERVER_USE_TLS 0`, `SERVER_HOST` to the laptop's address on the hotspot, and `SERVER_PORT 5000`.
+For the main unit, the PlatformIO sidebar shows two boards: **esp32dev** is the ordinary ESP32 (the default), **esp32-s3** the S3. Use Upload under the one you have.
+
+If Upload says it can't find the board: try another USB cable (many are charge-only), install the USB driver for the chip printed next to the ESP32's USB port (CP2102 or CH340), and if it still waits at `Connecting...`, hold the **BOOT** button until uploading starts.
+
+Everything you might change is in each unit's `include/config.h`: the server address, pins, which heading sensor, timings, and the narrow-road rules. To use a server on your laptop instead of Render, set `SERVER_USE_TLS 0`, `SERVER_HOST` to the laptop's address on the hotspot, and `SERVER_PORT 5000`.
 
 ### What you should see
 
@@ -95,24 +136,35 @@ Everything you might change is in each unit's `include/config.h`: the server add
 [Server] Logged in as allen
 [Server] Device esp32-a1b2c3d4e5f6 linked to allen
 [Server] Registered as VEHICLE_004
-[Status] server: connected VEHICLE_004 | GPS: fix, 9 sats | IMU: ok, heading 87 (raw 87) | camera: 3.2 m, 0s ago
+[Status] server: connected VEHICLE_004 | GPS: fix, 9 sats, 51234 chars | IMU: QMC5883L ok, heading 87 (raw 124) | camera: 3.2 m, 0s ago
 ```
 
-The car appears on the admin page's Live map, like a phone. GPS needs open sky the first time and can take a minute or two to get a fix.
+The car appears on the admin page's Live map, like a phone. The NEO-6M needs open sky (outdoors, not by a window) the first time, and can take 2 to 5 minutes to get a fix. Its small LED starts blinking once it has one. `chars` going up means the ESP32 is hearing the GPS, fix or not.
 
-**Display**: "Waiting for the main unit to connect" until the main unit is sending, then the map and alerts.
+**Display**: "Waiting for the main unit to connect" until the main unit is sending, then the map and alerts. Until the screen is bought, open the website dashboard on the phone or laptop with the same account.
 
 **ESP32-CAM**: it prints its address. Open `http://that-address/` in a browser on the hotspot to see the road width live, and the picture with what it measured marked.
 
 ### Calibrating the heading
 
-The IMU's 0° must be north. In the main unit's serial monitor, the status line shows `heading 87 (raw 87)`.
+You do this by typing commands in PlatformIO's serial monitor (click in it, type, press Enter). What you set is saved on the ESP32 and kept through power-offs and new uploads.
 
-1. Park facing north (check with a phone compass app), away from other cars and metal.
-2. Note the raw value, say 37. Set `HEADING_OFFSET_DEG` to minus that (`-37.0f`) in `config.h` and upload again.
-3. Turn the car right. The heading should go up. If it goes down, set `HEADING_REVERSED 1` and repeat step 2.
+| Command | What it does |
+|---|---|
+| `cal` | Calibrates the compass. Turn it slowly round, flat, for 30 seconds |
+| `north` | Says "the car is pointing north right now" |
+| `reverse` | Flips the direction, if the heading goes down when turning right |
+| `reset` | Forgets everything saved |
+| `watch` | Shows the heading 5 times a second as you turn it; press Enter to stop |
+| `help` | Lists these |
 
-Without an IMU, the main unit uses the GPS direction of travel instead, which only works while moving.
+1. **`cal`.** Mount the compass where it will stay, on the breadboard, flat. Type `cal`, then slowly turn the whole breadboard round two or three full circles, keeping it flat, away from laptops, phones and metal tables. It prints the X and Y ranges as you go. When the 30 seconds are up it says `Done and saved`, or tells you to try again if it wasn't turned all the way round. Do this again if you move the compass, or once it is in the car.
+2. **`north`.** Point the car (or the arrow printed on the GY-271) north, using a phone compass app, and type `north`. The status line should now say `heading 0`.
+3. **Check with a right turn.** Turn right a quarter circle: it should say about 90 (east). If it goes down instead (about 270), type `reverse`.
+
+Why calibrate: magnets and steel near the sensor (the GPS, the car body, wires) shift its readings. `cal` measures that shift and takes it out.
+
+**When moving faster than 7 km/h** (2 m/s, set by `GPS_COURSE_MIN_SPEED_MPS`), the main unit uses the GPS's direction of travel instead, and the status line says `using GPS course`. That is more accurate while driving, because a car's own steel pulls a compass off. The compass covers when the car is stopped or slow, such as waiting at a narrow road's entrance. Without any sensor, it uses only the GPS direction.
 
 ## The camera
 
@@ -163,6 +215,7 @@ Check it: stand in a lane, measure its width with a tape, and compare with the r
 |---|---|---|
 | Your server accepts the hardware's messages | `python tools/protocol_check.py --server https://YOUR-SERVER --username you --password ...` | `pip install websocket-client`. Moves that account to a test device |
 | Narrow-road finding (main unit) | `g++ -std=c++17 -Imain-unit/src main-unit/host-tests/test_narrow_detector.cpp main-unit/src/narrow_detector.cpp -o t && ./t` | g++ |
+| Compass calibration and heading corrections (main unit) | `g++ -std=c++17 -Imain-unit/src main-unit/host-tests/test_heading_math.cpp main-unit/src/heading_math.cpp -o h && ./h` | g++ |
 | The screen reads the server's messages, worded like the website | See the top of `display-unit/host-tests/test_display_logic.cpp` | g++, ArduinoJson (PlatformIO downloads it) |
 | Preview the screen on your laptop | `display-unit/host-tests/preview/preview.sh` | g++, after one PlatformIO build of the display |
 | Camera width on synthetic lanes | `python camera-unit/python/tests/test_width.py` | numpy, opencv-python |
@@ -175,7 +228,8 @@ GitHub runs the firmware builds and these tests on every push (`.github/workflow
 
 Checked before this was handed over:
 
-- All three firmwares **compile** for their boards (Arduino core 3.0.7), both IMU choices and both camera modes.
+- All three firmwares **compile** for their boards (Arduino core 3.0.7): the main unit for the ordinary ESP32 and the ESP32-S3, with each heading sensor choice; both camera modes.
+- The compass calibration and the `north` and `reverse` corrections were tested on simulated compass readings (a shifted, squashed circle comes back within a degree; part turns are rejected).
 - `tools/protocol_check.py` passed **15 of 15** against the real server code with a temporary database and `REQUIRE_VEHICLE_TOKEN` on: login, device link, register, telemetry, headings, the Socket.IO session, the road outline reaching the screen, a suggestion, and both refusal messages the firmware looks for.
 - The screen's reading of `vehicles:update` was tested on **real messages recorded from the server** while its own simulators drove through 14 of the 15 alerts. Its wording matched what the website's `NarrowRoadAlert` component shows for the same messages, word for word.
 - The camera measured synthetic lanes of 2.5 to 6 m to within 9 cm, and the ESP32-CAM's C++ gives the same answer as Python on every test picture.
@@ -184,7 +238,8 @@ Checked before this was handed over:
 Not checked, because it needs the physical parts:
 
 - **The display's pins** come from the graphics library's own example for the 4.3-inch ESP32-8048S043, which uses the same pins as the 5-inch board. If the screen stays dark or shows noise, compare `board.h` with the seller's demo code. If taps land in the wrong corner, change `TOUCH_ROTATION`.
-- **The BNO085's heading direction** depends on how the board is mounted, which is why calibrating the heading is a setup step.
+- **Nothing has run on the real ESP32, GPS or compass yet.** The compass driver follows each chip's datasheet; which of the three chips your GY-271 has shows in the first lines the main unit prints.
+- **The heading's direction** depends on how the sensor is mounted, which is why `north` and `reverse` are setup steps.
 - **Real roads**: lighting, shadows and parked vehicles will make the camera less accurate than on synthetic pictures. Test in real lanes and report the accuracy you measure.
 
 ## Limits
@@ -198,8 +253,11 @@ Not checked, because it needs the physical parts:
 ## Folders
 
 ```
-main-unit/                 ESP32-S3 firmware (PlatformIO)
-  include/config.h         server, pins, IMU choice, narrow-road rules
+main-unit/                 ESP32 / ESP32-S3 firmware (PlatformIO)
+  include/config.h         server, pins, heading sensor, narrow-road rules
+  src/compass.cpp          GY-271 driver (QMC5883L, QMC5883P, HMC5883L)
+  src/imu_reader.cpp       heading from the chosen sensor; saved corrections
+  src/heading_math.cpp     compass calibration and north/reverse arithmetic
   src/server_link.cpp      login, device link, /vehicle WebSocket, suggestions
   src/narrow_detector.cpp  camera widths + GPS → narrow-road suggestions
   host-tests/              tests that run on a laptop

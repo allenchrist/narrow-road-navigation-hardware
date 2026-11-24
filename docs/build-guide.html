@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Narrow Road Build Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a bench manual. Sticky contents rail on the left, numbered stages
+   on the right; wire colours are real tokens used in tables and diagrams. */
+:root {
+  --bg: #f6f7f4;
+  --surface: #ffffff;
+  --ink: #17201b;
+  --muted: #5a665f;
+  --line: #d9ded8;
+  --accent: #1d6b48;        /* solder-mask green */
+  --accent-soft: #e3f0e8;
+  --warn: #a4410f;
+  --warn-soft: #fcebdd;
+  --code-bg: #eef1ec;
+  --pcb: #1f3d30;
+  --pcb-ink: #e8f2ec;
+  --rail-plus: #f6d8d8;
+  --rail-minus: #d8e1f6;
+  --w-gnd: #222222;
+  --w-3v3: #d92b2b;
+  --w-tx: #e0b000;
+  --w-rx: #2f9e44;
+  --w-sda: #2563eb;
+  --w-scl: #ffffff;
+  --w-edge: #3a4540;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111613; --surface: #182019; --ink: #e5ece7; --muted: #9aa8a0; --line: #2c3730;
+    --accent: #5cc893; --accent-soft: #1d3327; --warn: #f0a070; --warn-soft: #3a2518;
+    --code-bg: #1f2923; --pcb: #234836; --pcb-ink: #e8f2ec;
+    --rail-plus: #4a2626; --rail-minus: #26324a;
+    --w-gnd: #111111; --w-3v3: #ef4b4b; --w-tx: #f2c230; --w-rx: #45b85a; --w-sda: #5b8cff; --w-scl: #f4f4f4; --w-edge: #8a978f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111613; --surface: #182019; --ink: #e5ece7; --muted: #9aa8a0; --line: #2c3730;
+  --accent: #5cc893; --accent-soft: #1d3327; --warn: #f0a070; --warn-soft: #3a2518;
+  --code-bg: #1f2923; --pcb: #234836; --pcb-ink: #e8f2ec;
+  --rail-plus: #4a2626; --rail-minus: #26324a;
+  --w-gnd: #111111; --w-3v3: #ef4b4b; --w-tx: #f2c230; --w-rx: #45b85a; --w-sda: #5b8cff; --w-scl: #f4f4f4; --w-edge: #8a978f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; padding-block: 40px 80px; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; font-size: 14px; }
+nav.toc .label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: s -1; }
+nav.toc li { counter-increment: s; }
+nav.toc a { display: flex; gap: 10px; padding: 4px 8px; border-radius: 6px; color: var(--ink); text-decoration: none; }
+nav.toc a::before { content: counter(s); font-family: var(--font-mono); color: var(--muted); min-width: 1.4em; }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--accent-soft); outline: none; }
+nav.toc .progress { margin-top: 16px; font-size: 13px; color: var(--muted); }
+nav.toc .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+nav.toc .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+
+main { min-width: 0; }
+header.intro { margin-bottom: 40px; }
+header.intro .eyebrow { font-family: var(--font-mono); font-size: 13px; color: var(--accent); letter-spacing: .04em; }
+h1 { font-size: clamp(30px, 5vw, 42px); line-height: 1.15; margin: 8px 0 16px; text-wrap: balance; font-weight: 700; }
+header.intro p { max-width: 65ch; color: var(--muted); font-size: 18px; margin: 0; }
+
+section.stage { border-top: 1px solid var(--line); padding-block: 36px 8px; scroll-margin-top: 16px; }
+.stage-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 12px; }
+.stage-no { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 2px 9px; border-radius: 5px; }
+h2 { font-size: 26px; line-height: 1.25; margin: 0; text-wrap: balance; }
+h3 { font-size: 18px; margin: 28px 0 8px; }
+p, li { max-width: 68ch; }
+.time { font-size: 13px; color: var(--muted); }
+a { color: var(--accent); }
+code, kbd, .mono { font-family: var(--font-mono); font-size: .9em; }
+code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+kbd { border: 1px solid var(--line); border-bottom-width: 2px; padding: 0 6px; border-radius: 4px; background: var(--surface); }
+pre { background: var(--code-bg); padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.5; margin: 12px 0; }
+pre code { background: none; padding: 0; }
+
+.callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; max-width: 72ch; }
+.callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+.callout strong:first-child { display: block; margin-bottom: 2px; }
+.callout p { margin: 4px 0; }
+
+.table-box { overflow-x: auto; margin: 14px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; background: var(--code-bg); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-family: var(--font-mono); color: var(--muted); width: 2.5em; font-variant-numeric: tabular-nums; }
+
+.wire { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.wire::before { content: ""; width: 26px; height: 8px; border-radius: 4px; background: var(--c); border: 1.5px solid var(--w-edge); }
+
+.steps { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 10px; counter-reset: st; }
+.steps > li { counter-increment: st; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; max-width: none; }
+.steps > li > input { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--accent); cursor: pointer; }
+.steps > li > div { min-width: 0; }
+.steps > li > div > :first-child { margin-top: 0; }
+.steps > li > div > :last-child { margin-bottom: 0; }
+.steps > li.done { opacity: .6; }
+.steps > li.done > div > b:first-child { text-decoration: line-through; }
+
+.figure { margin: 18px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
+.figure svg { display: block; width: 100%; height: auto; min-width: 560px; }
+.figure figcaption, .figcap { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 14px 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.card h4 { margin: 0 0 4px; font-size: 16px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: 2px; }
+.tag.no { background: var(--code-bg); color: var(--muted); }
+
+dl.gloss { display: grid; grid-template-columns: minmax(110px, max-content) minmax(0, 1fr); gap: 6px 18px; margin: 12px 0; }
+dl.gloss dt { font-weight: 600; font-family: var(--font-mono); font-size: 15px; }
+dl.gloss dd { margin: 0; color: var(--ink); }
+
+/* SVG theming */
+.svg-text { fill: var(--ink); font-family: var(--font-mono); font-size: 13px; }
+.svg-muted { fill: var(--muted); font-family: var(--font-body); font-size: 12px; }
+.svg-label { fill: var(--ink); font-family: var(--font-body); font-size: 15px; font-weight: 600; }
+.pcb { fill: var(--pcb); }
+.pcb-text { fill: var(--pcb-ink); font-family: var(--font-mono); font-size: 12px; }
+.pcb-dim { fill: var(--pcb-ink); opacity: .45; font-family: var(--font-mono); font-size: 12px; }
+.mod { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.mod-blue { fill: #1e4fa0; }
+.mod-green { fill: #2b6e3f; }
+.mod-text { fill: #ffffff; font-family: var(--font-mono); font-size: 12px; }
+.pin { fill: #c9a227; stroke: #7a5f10; stroke-width: 1; }
+.pin-dim { fill: #8f9a94; opacity: .5; }
+.wire-edge { fill: none; stroke: var(--w-edge); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.wire-core { fill: none; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+.end { stroke: var(--w-edge); stroke-width: 1.5; }
+.rail-p { fill: var(--rail-plus); }
+.rail-m { fill: var(--rail-minus); }
+.hole { fill: var(--muted); opacity: .55; }
+.hole-on { fill: var(--accent); }
+.strip-on { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+
+@media (max-width: 860px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 24px 64px; }
+  nav.toc { position: static; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  nav.toc ol { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+@media (max-width: 480px) {
+  dl.gloss { grid-template-columns: minmax(0, 1fr); }
+  dl.gloss dd { margin-bottom: 8px; }
+  h2 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <div class="label">Stages</div>
+  <ol>
+    <li><a href="#start">What you have</a></li>
+    <li><a href="#words">Words you'll see</a></li>
+    <li><a href="#prepare">Prepare the parts</a></li>
+    <li><a href="#breadboard">How a breadboard works</a></li>
+    <li><a href="#pins">Find the pins</a></li>
+    <li><a href="#wiring">Connect the wires</a></li>
+    <li><a href="#software">Install the software</a></li>
+    <li><a href="#settings">Fill in your settings</a></li>
+    <li><a href="#upload">Load the code</a></li>
+    <li><a href="#monitor">Read the messages</a></li>
+    <li><a href="#gps">GPS outdoors</a></li>
+    <li><a href="#compass">Calibrate the compass</a></li>
+    <li><a href="#website">See it on the website</a></li>
+    <li><a href="#camera">Phone camera</a></li>
+    <li><a href="#everyday">Every time after</a></li>
+    <li><a href="#trouble">When something's wrong</a></li>
+    <li><a href="#safety">Safety</a></li>
+  </ol>
+  <div class="progress"><span id="progText">0 of 0 steps done</span><div class="bar"><i id="progBar"></i></div></div>
+</nav>
+
+<main>
+<header class="intro">
+  <div class="eyebrow">Narrow Road Navigation · main unit</div>
+  <h1>Building the car unit, from the bag of parts to the live map</h1>
+  <p>Every step, in order, for someone who has never wired anything before. Tick each step as you finish it; your ticks are remembered in this browser. If a step doesn't turn out as described, stop there and send the serial monitor text to Claude.</p>
+</header>
+
+<!-- 0 -->
+<section class="stage" id="start">
+  <div class="stage-head"><span class="stage-no">0</span><h2>What you have, and what each part does</h2></div>
+  <div class="grid2">
+    <div class="card"><h4>ESP32 DevKit <span class="tag">gets the code</span></h4><p>A tiny computer with Wi-Fi built in. It's the only part you load a program onto. It reads the GPS and compass and sends everything to the Render server.</p></div>
+    <div class="card"><h4>NEO-6M GPS <span class="tag no">no code</span></h4><p>Listens to satellites and works out where it is. It sends its position to the ESP32 over two wires, once a second, by itself.</p></div>
+    <div class="card"><h4>GY-271 compass <span class="tag no">no code</span></h4><p>Measures the earth's magnetic field, which tells the ESP32 which way the car faces. The ESP32 sets it up each time it starts.</p></div>
+    <div class="card"><h4>Breadboard <span class="tag no">no code</span></h4><p>A board full of holes that joins wires together without soldering. Push a wire in, pull it out to change it.</p></div>
+    <div class="card"><h4>Jumper wires <span class="tag no">no code</span></h4><p>Short wires with pins on the ends. <b>Male</b> ends have a pin that goes into a hole. <b>Female</b> ends have a socket that slides over a pin.</p></div>
+    <div class="card"><h4>4 × Li-ion cells <span class="tag no">not yet</span></h4><p>Leave these in the box for now. You need a charger board before they're safe to use. See <a href="#safety">Safety</a>.</p></div>
+  </div>
+  <h3>You also need</h3>
+  <ul>
+    <li>Your <b>laptop</b> (Windows), to load the code and later run the camera program.</li>
+    <li>A <b>USB data cable</b> that fits the ESP32: micro-USB on most DevKit boards, USB-C on some. Many cables that come with phones only charge and won't work. If you have a few, try them all.</li>
+    <li>Your <b>phone</b> with mobile data, for the hotspot.</li>
+    <li>Your Narrow Road <b>account</b> username and password (the one from the Android app).</li>
+    <li>Optional: a <b>USB power bank</b>, to take the unit outdoors or into the car without the laptop.</li>
+  </ul>
+</section>
+
+<!-- 1 -->
+<section class="stage" id="words">
+  <div class="stage-head"><span class="stage-no">1</span><h2>Words you'll see</h2></div>
+  <dl class="gloss">
+    <dt>Pin</dt><dd>One of the little metal legs on a board. Each has a name printed next to it.</dd>
+    <dt>VCC / 3V3</dt><dd>Power in. <code>3V3</code> means 3.3 volts. <code>VCC</code> on a module is where its power goes in.</dd>
+    <dt>VIN</dt><dd>The ESP32's 5-volt pin. It comes straight from USB. You don't use it in this build.</dd>
+    <dt>GND</dt><dd>Ground: the "minus" side of power. Every part must share the same ground, or nothing works.</dd>
+    <dt>TX / RX</dt><dd>Transmit (talk) and receive (listen). One part's TX always goes to the other part's RX.</dd>
+    <dt>SDA / SCL</dt><dd>The two wires of <b>I2C</b>, how the compass talks. SDA carries the data and SCL keeps time. SDA goes to SDA, SCL to SCL.</dd>
+    <dt>GPIO 16</dt><dd>A numbered ESP32 pin. It's printed on the board as <code>D16</code> or <code>RX2</code>.</dd>
+    <dt>Firmware</dt><dd>The program that runs on the ESP32: the code in the <code>main-unit</code> folder.</dd>
+    <dt>Upload</dt><dd>Copying the firmware from the laptop into the ESP32 over the USB cable.</dd>
+    <dt>Serial monitor</dt><dd>A window in VS Code where you read what the ESP32 prints, and type commands to it.</dd>
+    <dt>Fix</dt><dd>The GPS has heard enough satellites to know where it is.</dd>
+  </dl>
+</section>
+
+<!-- 2 -->
+<section class="stage" id="prepare">
+  <div class="stage-head"><span class="stage-no">2</span><h2>Prepare the parts</h2></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="s-prep-headers"><div><b>Check the pin strips are soldered on.</b>
+      <p>Look at the GPS and the compass. If each has a row of metal pins fixed to it, go on. If the pins came loose in a little bag, they must be soldered on first. Wires just pushed through the holes touch on and off, and the board keeps disappearing. Any electronics or mobile-repair shop can do it in a few minutes. Ask for the pins on the <b>underside</b>, so the board can sit in the breadboard.</p></div></li>
+    <li><input type="checkbox" id="s-prep-antenna"><div><b>Fit the GPS antenna.</b>
+      <p>The square, beige ceramic block on a thin cable is the antenna. Press its tiny round plug straight down onto the small gold socket on the GPS board until it clicks. It's delicate: press, don't twist. The beige side must face the sky when in use.</p></div></li>
+    <li><input type="checkbox" id="s-prep-table"><div><b>Clear a table.</b>
+      <p>Work on wood, plastic or cardboard, not a metal surface: metal under the boards can short their pins. Keep the USB cable <b>unplugged</b> until stage 6 tells you to plug it in.</p></div></li>
+  </ol>
+</section>
+
+<!-- 3 -->
+<section class="stage" id="breadboard">
+  <div class="stage-head"><span class="stage-no">3</span><h2>How a breadboard works</h2></div>
+  <p>Inside, metal strips join some holes together. Knowing which ones is the whole trick:</p>
+  <figure class="figure">
+    <svg viewBox="0 0 640 350" role="img" aria-label="Breadboard: holes a to e in one numbered row are joined, f to j are joined separately, and each long rail is joined along its length">
+      <!-- rails top -->
+      <rect x="20" y="14" width="600" height="18" rx="4" class="rail-p"/>
+      <rect x="20" y="36" width="600" height="18" rx="4" class="rail-m"/>
+      <text x="26" y="27" class="svg-text" font-size="12">+</text>
+      <text x="26" y="50" class="svg-text" font-size="12">−</text>
+      <g id="railholes"></g>
+      <!-- body -->
+      <rect x="40" y="98" width="20" height="94" rx="5" class="strip-on"/>
+      <g id="bbholes"></g>
+      <text x="320" y="340" class="svg-muted" text-anchor="middle">Numbered rows run across the board; letters a–j run down it</text>
+    </svg>
+    <figcaption>The green box shows one group: holes <b>a, b, c, d, e</b> in row 1 are joined. Holes <b>f–j</b> of row 1 are a separate group on the other side of the middle gap. The <b>+</b> and <b>−</b> rails along the edge are each joined along their whole length.</figcaption>
+  </figure>
+  <ul>
+    <li>Put two wires in the <b>same group</b> and they're connected.</li>
+    <li>The <b>middle gap</b> separates the two sides. Boards like the ESP32 sit across it, so their two rows of pins don't touch each other.</li>
+    <li>Some long breadboards have the rails <b>split in the middle</b>. If the red or blue line along the edge has a break halfway, keep everything on one half.</li>
+    <li>A module's pin strip goes <b>along</b> the board, each pin in a different numbered row. If two pins share a row, they're shorted together.</li>
+  </ul>
+</section>
+
+<!-- 4 -->
+<section class="stage" id="pins">
+  <div class="stage-head"><span class="stage-no">4</span><h2>Find the pins on each board</h2></div>
+  <p>Every pin has its name printed beside it. If you can't see the names on top, turn the board over. Always go by the <b>printed name</b>, not by counting positions.</p>
+
+  <h3>ESP32 DevKit (30 pins)</h3>
+  <p>Hold it with the USB port at the bottom and the metal can (with the zig-zag antenna) at the top. You'll use <b>only the right-hand side</b> in this build: the side whose bottom pin is <code>3V3</code>.</p>
+  <div class="table-box"><table>
+    <thead><tr><th>Left side, top → bottom</th><th>Right side, top → bottom</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">EN</td><td class="mono">D23</td><td></td></tr>
+      <tr><td class="mono">VP</td><td class="mono"><b>D22</b></td><td><span class="wire" style="--c: var(--w-scl)">compass SCL</span></td></tr>
+      <tr><td class="mono">VN</td><td class="mono">TX0</td><td>leave empty: the USB uses it</td></tr>
+      <tr><td class="mono">D34</td><td class="mono">RX0</td><td>leave empty: the USB uses it</td></tr>
+      <tr><td class="mono">D35</td><td class="mono"><b>D21</b></td><td><span class="wire" style="--c: var(--w-sda)">compass SDA</span></td></tr>
+      <tr><td class="mono">D32</td><td class="mono">D19</td><td></td></tr>
+      <tr><td class="mono">D33</td><td class="mono">D18</td><td></td></tr>
+      <tr><td class="mono">D25</td><td class="mono">D5</td><td></td></tr>
+      <tr><td class="mono">D26</td><td class="mono"><b>TX2</b> (GPIO 17)</td><td><span class="wire" style="--c: var(--w-rx)">GPS RX</span></td></tr>
+      <tr><td class="mono">D27</td><td class="mono"><b>RX2</b> (GPIO 16)</td><td><span class="wire" style="--c: var(--w-tx)">GPS TX</span></td></tr>
+      <tr><td class="mono">D14</td><td class="mono">D4</td><td></td></tr>
+      <tr><td class="mono">D12</td><td class="mono">D2</td><td>(the blue LED on the board)</td></tr>
+      <tr><td class="mono">D13</td><td class="mono">D15</td><td></td></tr>
+      <tr><td class="mono">GND</td><td class="mono"><b>GND</b></td><td><span class="wire" style="--c: var(--w-gnd)">to the − rail</span></td></tr>
+      <tr><td class="mono">VIN</td><td class="mono"><b>3V3</b></td><td><span class="wire" style="--c: var(--w-3v3)">to the + rail</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><strong>If your board has 38 pins, or a different order</strong>
+    <p>Look for these printed names instead: <code>D22</code>, <code>D21</code>, <code>RX2</code> or <code>D16</code>, <code>TX2</code> or <code>D17</code>, <code>GND</code> and <code>3V3</code>. Some boards print <code>G22</code> or <code>IO22</code> instead of <code>D22</code>; they mean the same pin.</p></div>
+  <div class="callout warn"><strong>Read the label on the metal can</strong>
+    <p>If it says <b>ESP32-WROOM-32</b>, carry on. If it says <b>ESP32-WROVER</b>, GPIO 16 and 17 are used inside the module and the GPS won't work there. Stop and ask Claude to move the GPS to other pins.</p></div>
+
+  <div class="grid2">
+    <div class="card"><h4>NEO-6M GPS: 4 pins</h4><p><code>VCC</code> power in · <code>RX</code> listens · <code>TX</code> talks · <code>GND</code> ground</p></div>
+    <div class="card"><h4>GY-271 compass: 5 pins</h4><p><code>VCC</code> power in · <code>GND</code> ground · <code>SCL</code> clock · <code>SDA</code> data · <code>DRDY</code> not used</p></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="stage" id="wiring">
+  <div class="stage-head"><span class="stage-no">5</span><h2>Connect the wires</h2><span class="time">about 20 minutes</span></div>
+  <div class="callout warn"><strong>USB unplugged the whole time</strong><p>Never add or move a wire while the ESP32 has power. It only takes a moment for a stray wire to short 3V3 to GND.</p></div>
+
+  <figure class="figure">
+    <svg viewBox="0 0 900 610" role="img" aria-label="Wiring diagram: ESP32 3V3 to plus rail, GND to minus rail, both modules powered from the rails, GPS TX to RX2, GPS RX to TX2, compass SDA to D21, compass SCL to D22">
+      <!-- ESP32 board -->
+      <rect x="30" y="30" width="220" height="545" rx="10" class="pcb"/>
+      <rect x="85" y="44" width="110" height="70" rx="4" fill="#9aa4a0" opacity=".85"/>
+      <text x="140" y="76" text-anchor="middle" class="mod-text" fill="#1a1a1a" style="fill:#1a1a1a">ESP32</text>
+      <text x="140" y="92" text-anchor="middle" class="mod-text" style="fill:#1a1a1a;font-size:10px">WROOM-32</text>
+      <polyline points="95,40 105,34 115,40 125,34 135,40 145,34 155,40 165,34 175,40 185,34" fill="none" stroke="#c9a227" stroke-width="2"/>
+      <rect x="110" y="560" width="60" height="26" rx="4" fill="#b8bfbb" stroke="#6b726e"/>
+      <text x="140" y="603" text-anchor="middle" class="svg-muted">USB</text>
+      <g id="esppins"></g>
+      <!-- rails -->
+      <rect x="292" y="40" width="20" height="530" rx="5" class="rail-p"/>
+      <rect x="324" y="40" width="20" height="530" rx="5" class="rail-m"/>
+      <text x="302" y="34" text-anchor="middle" class="svg-text" font-weight="600">+</text>
+      <text x="334" y="34" text-anchor="middle" class="svg-text" font-weight="600">−</text>
+      <!-- compass -->
+      <rect x="420" y="50" width="200" height="200" rx="8" class="mod-blue"/>
+      <text x="530" y="140" text-anchor="middle" class="mod-text" style="font-size:15px;font-weight:600">GY-271</text>
+      <text x="530" y="160" text-anchor="middle" class="mod-text">compass</text>
+      <g transform="translate(560,195)"><line x1="0" y1="0" x2="34" y2="0" stroke="#fff" stroke-width="2"/><polygon points="34,-5 44,0 34,5" fill="#fff"/><text x="22" y="-8" class="mod-text" text-anchor="middle">X</text></g>
+      <!-- gps -->
+      <rect x="420" y="320" width="200" height="200" rx="8" class="mod-green"/>
+      <text x="540" y="415" text-anchor="middle" class="mod-text" style="font-size:15px;font-weight:600">NEO-6M</text>
+      <text x="540" y="435" text-anchor="middle" class="mod-text">GPS</text>
+      <rect x="650" y="370" width="90" height="90" rx="6" fill="#d8c9a3" stroke="#8b7d58"/>
+      <text x="695" y="420" text-anchor="middle" class="svg-muted" style="fill:#4a4030">antenna</text>
+      <path d="M620 470 C 640 480, 650 470, 660 455" fill="none" stroke="#555" stroke-width="2"/>
+      <g id="modpins"></g>
+      <g id="wires"></g>
+      <!-- legend -->
+      <text x="660" y="560" class="svg-muted">Keep the compass at least 10 cm</text>
+      <text x="660" y="576" class="svg-muted">from the GPS and its antenna</text>
+    </svg>
+    <figcaption>Wire colours match the table below. A wire drawn across a rail just passes over it; it only connects where it ends in a dot. On your breadboard, the rails are the long + and − strips along the edge.</figcaption>
+  </figure>
+
+  <h3>Where to place each board</h3>
+  <ol class="steps">
+    <li><input type="checkbox" id="s-place-esp"><div><b>ESP32 across the middle gap, at one end of the breadboard.</b>
+      <p>Turn it so the side with <code>3V3</code> and <code>D22</code> faces the edge of the breadboard that has a free row of holes beside the pins. The ESP32 is wide, so the other side has no free holes, which is fine because you don't use that side. Line the pins up with the holes, then press down evenly on both ends until the black plastic strips touch the breadboard. Don't press on the metal can.</p></div></li>
+    <li><input type="checkbox" id="s-place-gps"><div><b>GPS a little further along the breadboard,</b> its 4 pins each in a different numbered row. Put the antenna block flat, beige side up.</p></div></li>
+    <li><input type="checkbox" id="s-place-compass"><div><b>Compass at the far end,</b> at least 10 cm (a hand's width) from the GPS and its antenna. Its 5 pins each go in a different numbered row. It must lie <b>flat</b>. The <b>X arrow</b> printed on it points to the front of the car later.</p></div></li>
+  </ol>
+
+  <h3>The 10 wires</h3>
+  <p>"+ rail" and "− rail" mean any hole along those long strips on the same side as the ESP32's 3V3 pin. To connect to a pin, put the wire in a hole of the <b>same numbered row and same side</b> as that pin.</p>
+  <div class="table-box"><table>
+    <thead><tr><th>#</th><th>From</th><th>To</th><th>Colour</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>ESP32 <b>3V3</b></td><td><b>+ rail</b></td><td><span class="wire" style="--c: var(--w-3v3)">red</span></td><td>Puts 3.3 V power on the + rail</td></tr>
+      <tr><td class="num">2</td><td>ESP32 <b>GND</b> (right side)</td><td><b>− rail</b></td><td><span class="wire" style="--c: var(--w-gnd)">black</span></td><td>Puts ground on the − rail</td></tr>
+      <tr><td class="num">3</td><td>GPS <b>VCC</b></td><td><b>+ rail</b></td><td><span class="wire" style="--c: var(--w-3v3)">red</span></td><td>Powers the GPS</td></tr>
+      <tr><td class="num">4</td><td>GPS <b>GND</b></td><td><b>− rail</b></td><td><span class="wire" style="--c: var(--w-gnd)">black</span></td><td>GPS ground</td></tr>
+      <tr><td class="num">5</td><td>Compass <b>VCC</b></td><td><b>+ rail</b></td><td><span class="wire" style="--c: var(--w-3v3)">red</span></td><td>Powers the compass</td></tr>
+      <tr><td class="num">6</td><td>Compass <b>GND</b></td><td><b>− rail</b></td><td><span class="wire" style="--c: var(--w-gnd)">black</span></td><td>Compass ground</td></tr>
+      <tr><td class="num">7</td><td>GPS <b>TX</b></td><td>ESP32 <b>RX2</b> (D16)</td><td><span class="wire" style="--c: var(--w-tx)">yellow</span></td><td>GPS talks → ESP32 listens</td></tr>
+      <tr><td class="num">8</td><td>GPS <b>RX</b></td><td>ESP32 <b>TX2</b> (D17)</td><td><span class="wire" style="--c: var(--w-rx)">green</span></td><td>ESP32 talks → GPS listens</td></tr>
+      <tr><td class="num">9</td><td>Compass <b>SDA</b></td><td>ESP32 <b>D21</b></td><td><span class="wire" style="--c: var(--w-sda)">blue</span></td><td>Compass data</td></tr>
+      <tr><td class="num">10</td><td>Compass <b>SCL</b></td><td>ESP32 <b>D22</b></td><td><span class="wire" style="--c: var(--w-scl)">white</span></td><td>Compass clock</td></tr>
+    </tbody>
+  </table></div>
+  <p class="figcap">The colours are only suggestions. If your wires come in other colours, keep red for power and black for ground, and write down which colour went where.</p>
+
+  <div class="callout"><strong>Why the GPS is on 3V3, not 5 V</strong>
+    <p>The NEO-6M board accepts 3.3 V to 5 V, and its chip runs on 3.3 V anyway. Using 3V3 keeps every wire on the one side of the ESP32 that has free holes. If you ever do use VIN (5 V) for the GPS, that works too. <b>Never</b> put 5 V on the compass.</p></div>
+
+  <h3>Check before power</h3>
+  <ol class="steps">
+    <li><input type="checkbox" id="s-check-short"><div><b>No wire joins the + rail to the − rail,</b> and 3V3 doesn't share a row with GND.</div></li>
+    <li><input type="checkbox" id="s-check-txrx"><div><b>TX goes to RX and RX goes to TX</b> (wires 7 and 8 cross over).</div></li>
+    <li><input type="checkbox" id="s-check-firm"><div><b>Tug each wire gently.</b> None comes out, and each sits in a hole of the right row.</div></li>
+    <li><input type="checkbox" id="s-check-nobatt"><div><b>No battery is connected</b> anywhere. Power comes from USB only.</div></li>
+  </ol>
+</section>
+
+<!-- 6 -->
+<section class="stage" id="software">
+  <div class="stage-head"><span class="stage-no">6</span><h2>Install the software on the laptop</h2><span class="time">30–40 minutes, once</span></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="s-sw-vscode"><div><b>Install VS Code.</b>
+      <p>If it's already installed (you've been using it for this project), skip this. Otherwise go to <span class="mono">code.visualstudio.com</span>, click <b>Download for Windows</b>, run the installer and accept the defaults.</p></div></li>
+    <li><input type="checkbox" id="s-sw-pio"><div><b>Install PlatformIO.</b>
+      <p>In VS Code, click the <b>Extensions</b> icon on the left (four small squares), or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>. Search for <b>PlatformIO IDE</b> and click <b>Install</b>. It takes a few minutes. When it asks, click <b>Reload</b> or restart VS Code. An ant-head icon appears on the left: that's PlatformIO.</p></div></li>
+    <li><input type="checkbox" id="s-sw-plug"><div><b>Plug in the ESP32 now.</b>
+      <p>Connect the USB cable from the laptop to the ESP32. A small <b>red LED</b> on the ESP32 should light. The GPS board's LED may light too. If you smell something hot or a part gets warm within a few seconds, unplug at once and recheck stage 5.</p></div></li>
+    <li><input type="checkbox" id="s-sw-port"><div><b>Check that Windows sees the board.</b>
+      <p>Press <kbd>Windows</kbd>+<kbd>X</kbd> and click <b>Device Manager</b>. Open <b>Ports (COM &amp; LPT)</b>. You should see a line like <span class="mono">Silicon Labs CP210x USB to UART Bridge (COM5)</span> or <span class="mono">USB-SERIAL CH340 (COM6)</span>. The COM number can be anything.</p>
+      <p>If there's no "Ports" section, or you see an "Unknown device" with a yellow triangle:</p>
+      <ul>
+        <li>Look at the small chip next to the ESP32's USB socket. If it reads <b>CP2102</b>, search "CP210x driver Silicon Labs" and install it. If it reads <b>CH340</b>, search "CH340 driver" and install it.</li>
+        <li>If nothing appears at all, not even an unknown device, the <b>cable</b> is charge-only. Try another.</li>
+      </ul></div></li>
+  </ol>
+</section>
+
+<!-- 7 -->
+<section class="stage" id="settings">
+  <div class="stage-head"><span class="stage-no">7</span><h2>Open the project and fill in your settings</h2></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="s-set-open"><div><b>Open the main-unit folder.</b>
+      <p>In VS Code: <b>File → Open Folder…</b>, then choose <span class="mono">D:\allen\narrow-road-hardware\narrow-road-hardware\main-unit</span> and click <b>Select Folder</b>. If it asks "Do you trust the authors?", click <b>Yes</b>.</p>
+      <p>The first time, PlatformIO downloads the ESP32 tools: 5 to 10 minutes, with progress at the bottom right. Wait until it finishes.</p></div></li>
+    <li><input type="checkbox" id="s-set-secrets"><div><b>Fill in <code>include/secrets.h</code>.</b>
+      <p>In the file list on the left, open <b>include</b>, then <b>secrets.h</b>. Change only the text <b>between the quotes</b>:</p>
+<pre><code>#define WIFI_SSID "your-hotspot-name"         ← your phone's hotspot name
+#define WIFI_PASSWORD "your-hotspot-password" ← its password
+#define ACCOUNT_USERNAME "your-username"      ← your Narrow Road account
+#define ACCOUNT_PASSWORD "your-password"      ← its password</code></pre>
+      <ul>
+        <li>Capitals, spaces and symbols must match exactly. <span class="mono">Allen Phone</span> and <span class="mono">allen phone</span> are different names.</li>
+        <li>Keep both quote marks. Don't add spaces inside them.</li>
+        <li>To find the hotspot name: phone <b>Settings → Hotspot &amp; tethering → Wi-Fi hotspot</b> (the names vary by phone).</li>
+        <li>Save with <kbd>Ctrl</kbd>+<kbd>S</kbd>. The tab's dot disappears when it's saved.</li>
+      </ul>
+      <p>This file never goes to GitHub. Don't paste it into chats or screenshots.</p></div></li>
+    <li><input type="checkbox" id="s-set-config"><div><b>Glance at <code>include/config.h</code>, no changes needed.</b>
+      <p>It should already have these. If any is different, fix it and save:</p>
+<pre><code>#define SERVER_HOST "narrow-road-navigation-ckml.onrender.com"
+#define IMU_COMPASS          ← no // in front of this line
+// #define IMU_BNO085        ← these two keep their //
+// #define IMU_BNO055</code></pre>
+      <p>Under "Ordinary ESP32 DevKit": <code>GPS_RX_PIN 16</code>, <code>GPS_TX_PIN 17</code>, <code>IMU_SDA_PIN 21</code>, <code>IMU_SCL_PIN 22</code>.</p></div></li>
+    <li><input type="checkbox" id="s-set-hotspot"><div><b>Set up the phone hotspot.</b>
+      <ul>
+        <li>Turn the hotspot <b>on</b>.</li>
+        <li>If there's an <b>AP band</b> or <b>Band</b> setting, choose <b>2.4 GHz</b>. The ESP32 can't see 5 GHz Wi-Fi.</li>
+        <li>Turn <b>off</b> "Turn off hotspot automatically" or the timeout, so it stays on.</li>
+        <li>Make sure <b>mobile data</b> is on. The hotspot needs it to reach the internet.</li>
+      </ul></div></li>
+  </ol>
+</section>
+
+<!-- 8 -->
+<section class="stage" id="upload">
+  <div class="stage-head"><span class="stage-no">8</span><h2>Load the code onto the ESP32</h2><span class="time">2–5 minutes</span></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="s-up-env"><div><b>Open the PlatformIO panel.</b>
+      <p>Click the <b>ant-head icon</b> on the left. Under <b>Project Tasks</b> you'll see <b>esp32dev</b> and <b>esp32-s3</b>. Yours is <b>esp32dev</b> (the ordinary ESP32). Click it to open it, then open <b>General</b>.</p></div></li>
+    <li><input type="checkbox" id="s-up-upload"><div><b>Click Upload.</b>
+      <p>A terminal opens at the bottom. First it builds the program, about 1 to 2 minutes the first time. Then you'll see:</p>
+<pre><code>Connecting....
+Writing at 0x00010000... (3 %)
+...
+Writing at 0x0012c000... (100 %)
+Hard resetting via RTS pin...
+========== [SUCCESS] ==========</code></pre>
+      <p><b>SUCCESS</b> means the code is in the ESP32. It stays there even when unplugged.</p>
+      <p><b>If it sticks at</b> <span class="mono">Connecting.....___.....</span>: press and hold the <b>BOOT</b> button on the ESP32 (next to the USB socket) until "Writing" appears, then let go.</p>
+      <p><b>If it says</b> <span class="mono">could not open port</span> or <span class="mono">Access is denied</span>: something else is using the port. Close the serial monitor (click the bin icon on its terminal) and any other program talking to the board, then Upload again.</p></div></li>
+    <li><input type="checkbox" id="s-up-monitor"><div><b>Click Monitor</b> (in the same list, under <b>esp32dev → General</b>).
+      <p>The terminal now shows what the ESP32 prints. Press the <b>EN</b> button on the ESP32 (the other small button) to restart it, so you see its messages from the beginning.</p></div></li>
+  </ol>
+  <div class="callout"><strong>When do you need to upload again?</strong>
+    <p>Only when you change a file: <code>secrets.h</code>, <code>config.h</code> or the code. Every other time, just give the ESP32 power and it starts the program by itself.</p></div>
+</section>
+
+<!-- 9 -->
+<section class="stage" id="monitor">
+  <div class="stage-head"><span class="stage-no">9</span><h2>Read the messages</h2></div>
+  <p>Indoors, a good start looks like this:</p>
+<pre><code>Narrow Road Navigation: main unit
+Device ID: esp32-a1b2c3d4e5f6
+[IMU] Compass QMC5883L ready
+[IMU] QMC5883L | north offset 0.0, reversed no | not calibrated: type cal
+Type help for the heading calibration commands
+[Server] logging in
+[Server] Logged in as allenchrist
+[Server] Device esp32-a1b2c3d4e5f6 linked to allenchrist
+[Server] Registered as VEHICLE_009
+[Status] server: connected VEHICLE_009 | GPS: no fix, 0 sats, 4821 chars | IMU: QMC5883L ok, heading 213 (raw 213)</code></pre>
+  <p>A <b>[Status]</b> line comes every 5 seconds. Here's what each part means:</p>
+  <div class="table-box"><table>
+    <thead><tr><th>You see</th><th>Meaning</th><th>If it's wrong</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Compass QMC5883L ready</td><td>The compass wiring works (wires 5, 6, 9, 10)</td><td>If it says <span class="mono">Compass not found</span>, read the "Devices answering on I2C" line under it. <span class="mono">none</span> means a power or ground wire is loose, or SDA and SCL are swapped</td></tr>
+      <tr><td class="mono">chars</td><td>Goes up every 5 s: the ESP32 hears the GPS (wire 7). Indoors there's usually no fix yet, which is normal</td><td>If it stays near 0 and you see <span class="mono">No data from the GPS</span>: swap wires 7 and 8 (USB unplugged first)</td></tr>
+      <tr><td class="mono">server: connected</td><td>Wi-Fi, internet and your account all work</td><td>See the table below</td></tr>
+      <tr><td class="mono">heading 213</td><td>The compass is giving readings. They're wrong until you calibrate in stage 11</td><td></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>The server part of the status line</h3>
+  <div class="table-box"><table>
+    <thead><tr><th>It says</th><th>What to check</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">waiting for Wi-Fi</td><td>Hotspot on? Set to 2.4 GHz? Name and password in <code>secrets.h</code> exactly right? If you changed <code>secrets.h</code>, did you Upload again?</td></tr>
+      <tr><td class="mono">logging in</td><td>Normal for up to a minute: Render may be waking up. Opening the website in a browser wakes it faster</td></tr>
+      <tr><td class="mono">retrying soon</td><td>Read the line above it. "Not authorized" means the account username or password in <code>secrets.h</code> is wrong. Otherwise it's the phone's mobile data</td></tr>
+      <tr><td class="mono">connected VEHICLE_…</td><td>All good</td></tr>
+    </tbody>
+  </table></div>
+  <p>Typing in the monitor: click inside the terminal, type a command such as <code>help</code>, and press <kbd>Enter</kbd>. The letters show as you type.</p>
+</section>
+
+<!-- 10 -->
+<section class="stage" id="gps">
+  <div class="stage-head"><span class="stage-no">10</span><h2>Get the first GPS fix outdoors</h2><span class="time">5–10 minutes</span></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="s-gps-out"><div><b>Take it outside, under open sky.</b>
+      <p>Carry the laptop with the ESP32 still plugged in, keeping the breadboard flat so no wires come out. A terrace or open ground is best. GPS doesn't work indoors, and barely by a window. Put the antenna <b>beige side up</b>, facing the sky.</p></div></li>
+    <li><input type="checkbox" id="s-gps-wait"><div><b>Wait 2 to 5 minutes the very first time.</b>
+      <p>Keep the monitor open. The status line changes from <span class="mono">GPS: no fix, 0 sats</span> to <span class="mono">GPS: fix, 6 sats</span>. On the GPS board, a small LED starts <b>blinking once a second</b> when it has a fix. Later starts are faster (30 seconds or so), because a tiny battery on the GPS board remembers the satellites.</p></div></li>
+    <li><input type="checkbox" id="s-gps-sats"><div><b>Look for 5 or more satellites.</b> 4 is the minimum for a position. 7 to 10 is a good outdoor result.</div></li>
+  </ol>
+</section>
+
+<!-- 11 -->
+<section class="stage" id="compass">
+  <div class="stage-head"><span class="stage-no">11</span><h2>Calibrate the compass</h2><span class="time">5 minutes</span></div>
+  <p>Magnets and steel near the compass bend its readings, including the GPS, the USB cable and the car itself. Calibrating measures that bend and removes it. The result is saved in the ESP32, so you only do this again if you move the compass.</p>
+  <ol class="steps">
+    <li><input type="checkbox" id="s-cal-place"><div><b>Stand away from metal.</b> Not at a steel table, not next to a car, and keep your phone and other laptops away from the breadboard.</div></li>
+    <li><input type="checkbox" id="s-cal-cal"><div><b>Type <code>cal</code> and press Enter.</b>
+      <p>Over the next <b>30 seconds</b>, slowly turn the whole breadboard round <b>2 or 3 full circles</b>, keeping it flat like a plate on a table. Take about 10 seconds per circle. Every 3 seconds it prints how far the readings have swung:</p>
+<pre><code>[Cal] 24 s left | X range 41 uT, Y range 38 uT (each should reach about 60 to 90)
+[Cal] Done and saved. Now point the car north and type north</code></pre>
+      <p>If it says <span class="mono">Not saved: the sensor wasn't turned through full circles</span>, type <code>cal</code> again and turn more slowly, all the way round.</p></div></li>
+    <li><input type="checkbox" id="s-cal-north"><div><b>Point the X arrow north, then type <code>north</code>.</b>
+      <p>Open a compass app on your phone, then put the phone down a little away from the board. Turn the breadboard until the <b>X arrow</b> on the GY-271 points north. Type <code>north</code> and press Enter. The next status line should say <span class="mono">heading 0</span> (or 359, which is the same).</p></div></li>
+    <li><input type="checkbox" id="s-cal-right"><div><b>Turn it a quarter circle to the right (clockwise).</b>
+      <p>The X arrow now points east, and the heading should read about <b>90</b>. If it reads about <b>270</b> instead, type <code>reverse</code>, then repeat the <code>north</code> step and check again.</p></div></li>
+    <li><input type="checkbox" id="s-cal-check"><div><b>Check all four directions.</b> North ≈ 0, east ≈ 90, south ≈ 180, west ≈ 270. Within 10 to 15 degrees is good for a simple compass.</div></li>
+  </ol>
+  <div class="table-box"><table>
+    <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">cal</td><td>30-second calibration while you turn the board round</td></tr>
+      <tr><td class="mono">north</td><td>"The X arrow points north right now"</td></tr>
+      <tr><td class="mono">reverse</td><td>Flips the direction, if turning right makes the heading go down</td></tr>
+      <tr><td class="mono">reset</td><td>Forgets all of it, to start again</td></tr>
+      <tr><td class="mono">help</td><td>Lists these commands</td></tr>
+    </tbody>
+  </table></div>
+  <p>In the car, faster than about 7 km/h, the unit uses the GPS's direction of travel instead, which is more accurate when moving. The compass covers when you're stopped or slow, such as waiting at a narrow lane. Once the board is fixed in the car, run <code>cal</code> and <code>north</code> again there.</p>
+</section>
+
+<!-- 12 -->
+<section class="stage" id="website">
+  <div class="stage-head"><span class="stage-no">12</span><h2>See your car on the website</h2></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="s-web-open"><div><b>Open the website</b> in the laptop or phone browser: <span class="mono">narrow-road-navigation-ckml.onrender.com</span>. Log in with the <b>same account</b> as in <code>secrets.h</code>.</div></li>
+    <li><input type="checkbox" id="s-web-map"><div><b>Find the car.</b> On the dashboard (or the admin page's <b>Live map</b>), a car appears at your GPS position. Turn the breadboard and its arrow turns too.</div></li>
+    <li><input type="checkbox" id="s-web-alert"><div><b>Optional: test an alert.</b> Walk the unit into one of your narrow roads on the map (such as "PARKING"). The dashboard shows the narrow-road alert, just as it did with the phone app.</div></li>
+  </ol>
+  <div class="callout"><strong>Your phone app gets logged out</strong><p>That's expected. One account drives one car device. The ESP32 has taken over the account from the phone, so the phone now only provides the hotspot.</p></div>
+</section>
+
+<!-- 13 -->
+<section class="stage" id="camera">
+  <div class="stage-head"><span class="stage-no">13</span><h2>Add the phone camera</h2><span class="time">do this last</span></div>
+  <p>Do this only after stages 9 to 12 work. The phone films the road ahead, the laptop measures the road's width, and it sends each reading over the hotspot to the ESP32.</p>
+  <ol class="steps">
+    <li><input type="checkbox" id="s-cam-py"><div><b>Install the camera program's parts on the laptop (once).</b>
+      <p>In VS Code: <b>File → Open Folder</b>, choose the top <span class="mono">narrow-road-hardware</span> folder. Open a terminal with <b>Terminal → New Terminal</b>, then type:</p>
+<pre><code>pip install -r camera-unit/python/requirements.txt</code></pre></div></li>
+    <li><input type="checkbox" id="s-cam-app"><div><b>Install IP Webcam on the phone</b> (Play Store), open it, scroll to the bottom and tap <b>Start server</b>. It shows an address such as <span class="mono">http://192.168.43.1:8080</span>. Write it down.</div></li>
+    <li><input type="checkbox" id="s-cam-join"><div><b>Join the laptop to the phone hotspot.</b>
+      <p>If IP Webcam's address doesn't open in the laptop browser: open a terminal, type <code>ipconfig</code>, and find the Wi-Fi adapter's <b>Default Gateway</b>. That number is the phone. Use <span class="mono">http://THAT-NUMBER:8080</span>.</p></div></li>
+    <li><input type="checkbox" id="s-cam-mount"><div><b>Mount the phone firmly</b> in the car: centred, looking straight ahead and slightly down, so the road 4 to 8 m ahead is in the lower half of the picture. A windscreen phone holder works. If it moves later, calibrate again.</div></li>
+    <li><input type="checkbox" id="s-cam-cal"><div><b>Calibrate the camera once.</b>
+      <p>On flat ground, put four markers (stones or chalk crosses) at the corners of a rectangle <b>2 m wide</b>, from <b>4 m to 8 m ahead</b> of the camera, centred on the car. Measure along the ground from directly below the phone. Then:</p>
+<pre><code>cd camera-unit/python
+python calibrate.py --source http://192.168.43.1:8080/video</code></pre>
+      <p>A window shows the picture. Click the markers in this order: <b>near-left, near-right, far-right, far-left</b>. Press <kbd>Enter</kbd>. It saves <code>calibration.json</code>.</p></div></li>
+    <li><input type="checkbox" id="s-cam-run"><div><b>Run it while driving:</b>
+<pre><code>python width.py --source http://192.168.43.1:8080/video</code></pre>
+      <p>If Windows asks whether Python may use the network, click <b>Allow</b>. The ESP32's status line now ends with <span class="mono">camera: 3.2 m, 0s ago</span>. Press <kbd>q</kbd> in the picture window to stop.</p></div></li>
+  </ol>
+</section>
+
+<!-- 14 -->
+<section class="stage" id="everyday">
+  <div class="stage-head"><span class="stage-no">14</span><h2>Every time after the first setup</h2></div>
+  <p>No uploading and no calibrating. Just:</p>
+  <div class="table-box"><table>
+    <thead><tr><th>Order</th><th>Do this</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>Phone: turn on the <b>hotspot</b> and mobile data. For the camera, also open <b>IP Webcam → Start server</b></td></tr>
+      <tr><td class="num">2</td><td>ESP32: give it <b>USB power</b> (laptop, power bank, or a USB car charger). It joins the hotspot and connects in about 10 to 60 seconds</td></tr>
+      <tr><td class="num">3</td><td>Laptop: join the hotspot, and for the camera run <code>python width.py --source http://…:8080/video</code></td></tr>
+      <tr><td class="num">4</td><td>Browser: open the dashboard and log in</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 15 -->
+<section class="stage" id="trouble">
+  <div class="stage-head"><span class="stage-no">15</span><h2>When something's wrong</h2></div>
+  <div class="table-box"><table>
+    <thead><tr><th>Problem</th><th>Most likely cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td>No red LED on the ESP32</td><td>Cable or USB port</td><td>Try another cable and another USB port</td></tr>
+      <tr><td>LED goes off when you plug in a wire</td><td>Short circuit: 3V3 touching GND</td><td>Unplug USB at once and recheck wires 1 to 6</td></tr>
+      <tr><td>No COM port in Device Manager</td><td>Charge-only cable, or missing driver</td><td>Stage 6, step 4</td></tr>
+      <tr><td>Upload stuck at "Connecting…"</td><td>Board not in upload mode</td><td>Hold <b>BOOT</b> during "Connecting"</td></tr>
+      <tr><td>Monitor shows strange symbols</td><td>Wrong speed</td><td>It should be 115200. Close and reopen Monitor from PlatformIO, not another tool</td></tr>
+      <tr><td><span class="mono">Compass not found</span>, scan says <span class="mono">none</span></td><td>Compass power, ground, SDA or SCL loose</td><td>Check wires 5, 6, 9, 10. Try swapping 9 and 10</td></tr>
+      <tr><td>Scan finds an address, but not 0x0D, 0x2C or 0x1E</td><td>A different compass chip</td><td>Send the address to Claude</td></tr>
+      <tr><td><span class="mono">No data from the GPS</span></td><td>TX and RX swapped, or no power</td><td>Swap wires 7 and 8. Check the GPS LED lights</td></tr>
+      <tr><td>GPS chars go up but never a fix</td><td>Can't see the sky</td><td>Go fully outdoors, antenna beige side up, wait 5 minutes</td></tr>
+      <tr><td>Heading jumps around a lot</td><td>Metal or magnets nearby, or not calibrated</td><td>Move away from metal and run <code>cal</code> again</td></tr>
+      <tr><td><span class="mono">waiting for Wi-Fi</span> forever</td><td>Hotspot name or password, or 5 GHz band</td><td>Stage 7. Upload again after changing <code>secrets.h</code></td></tr>
+      <tr><td><span class="mono">Not authorized</span></td><td>Account username or password</td><td>Fix <code>secrets.h</code>, then Upload</td></tr>
+      <tr><td>The ESP32 keeps restarting</td><td>Weak USB power or a bad cable</td><td>Use a laptop USB port directly, not a hub. Try another cable</td></tr>
+    </tbody>
+  </table></div>
+  <p>For anything else: copy the serial monitor text (select it, then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and send it to Claude. Replace any password in it with <span class="mono">****</span> first.</p>
+</section>
+
+<!-- 16 -->
+<section class="stage" id="safety">
+  <div class="stage-head"><span class="stage-no">16</span><h2>Safety</h2></div>
+  <div class="callout warn"><strong>Leave the Li-ion cells in the box for now</strong>
+    <p>Without a charger and protection board they can overheat or catch fire if shorted or wired wrongly.</p>
+    <ul>
+      <li><b>Never</b> connect a cell straight to 3V3 (a full cell is 4.2 V; that pin takes at most 3.6 V) or to VIN (3.7 V is too little; the board restarts at random).</li>
+      <li><b>Never</b> join the four cells in series (up to 16.8 V). It can burn out the ESP32.</li>
+      <li>Never let a cell's two ends touch metal at the same time (keys, coins, wires).</li>
+    </ul></div>
+  <p><b>Later, the safe one-cell setup:</b> one cell in a proper 18650 holder → a <b>TP4056 charger board with protection</b> (it has pins B+ B− OUT+ OUT−) → an <b>MT3608 boost board</b>, set to exactly <b>5.0 V</b> with a multimeter before connecting → the ESP32's <b>VIN</b> and <b>GND</b>. Unplug the battery before plugging in USB. The README's "Power" section has the details.</p>
+  <ul>
+    <li>Always unplug USB before changing wires.</li>
+    <li>Keep the boards off metal surfaces.</li>
+    <li>In the car, never wire the unit into the car's 12 V system directly. Use a USB car charger.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<script>
+(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, parent, text) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+
+  // Breadboard figure: rails + 14 numbered rows × a–j
+  const rh = document.getElementById("railholes");
+  for (let i = 0; i < 26; i++) {
+    const x = 50 + i * 22;
+    el("circle", { cx: x, cy: 23, r: 3.2, class: "hole" }, rh);
+    el("circle", { cx: x, cy: 45, r: 3.2, class: "hole" }, rh);
+  }
+  const bb = document.getElementById("bbholes");
+  const letters = "abcdefghij";
+  const rowY = (j) => (j < 5 ? 104 + j * 20 : 104 + j * 20 + 26);
+  for (let i = 0; i < 26; i++) {
+    const x = 50 + i * 22;
+    if (i % 5 === 0) el("text", { x, y: 88, class: "svg-muted", "text-anchor": "middle" }, bb, String(i + 1));
+    for (let j = 0; j < 10; j++) {
+      el("circle", { cx: x, cy: rowY(j), r: 3.2, class: i === 0 && j < 5 ? "hole-on" : "hole" }, bb);
+    }
+  }
+  for (let j = 0; j < 10; j++) el("text", { x: 30, y: rowY(j) + 4, class: "svg-muted", "text-anchor": "middle" }, bb, letters[j]);
+  el("text", { x: 620, y: 211, class: "svg-muted", "text-anchor": "end" }, bb, "middle gap");
+  el("line", { x1: 40, y1: 207, x2: 540, y2: 207, stroke: "currentColor", "stroke-dasharray": "4 4", class: "hole" }, bb);
+
+  // ESP32 pins
+  const left = ["EN","VP","VN","D34","D35","D32","D33","D25","D26","D27","D14","D12","D13","GND","VIN"];
+  const right = ["D23","D22","TX0","RX0","D21","D19","D18","D5","TX2","RX2","D4","D2","D15","GND","3V3"];
+  const used = { D22: 1, D21: 1, TX2: 1, RX2: 1, GND: 1, "3V3": 1 };
+  const ep = document.getElementById("esppins");
+  const py = (i) => 140 + i * 29;
+  left.forEach((n, i) => {
+    el("circle", { cx: 45, cy: py(i), r: 5, class: "pin-dim" }, ep);
+    el("text", { x: 58, y: py(i) + 4, class: "pcb-dim" }, ep, n);
+  });
+  right.forEach((n, i) => {
+    const on = used[n];
+    el("circle", { cx: 235, cy: py(i), r: 5.5, class: on ? "pin" : "pin-dim" }, ep);
+    el("text", { x: 222, y: py(i) + 4, class: on ? "pcb-text" : "pcb-dim", "text-anchor": "end", "font-weight": on ? 600 : 400 }, ep, n);
+  });
+
+  // Module pins
+  const mp = document.getElementById("modpins");
+  const compass = { VCC: 80, GND: 115, SCL: 150, SDA: 185, DRDY: 220 };
+  const gps = { VCC: 350, RX: 390, TX: 430, GND: 470 };
+  for (const [n, y] of Object.entries(compass)) {
+    el("circle", { cx: 420, cy: y, r: 5.5, class: n === "DRDY" ? "pin-dim" : "pin" }, mp);
+    el("text", { x: 432, y: y + 4, class: "mod-text" }, mp, n === "DRDY" ? "DRDY (not used)" : n);
+  }
+  for (const [n, y] of Object.entries(gps)) {
+    el("circle", { cx: 420, cy: y, r: 5.5, class: "pin" }, mp);
+    el("text", { x: 432, y: y + 4, class: "mod-text" }, mp, n);
+  }
+
+  // Wires
+  const W = document.getElementById("wires");
+  const yR = (name) => py(right.indexOf(name));
+  const yGnd = py(13), y3v3 = py(14);
+  const wires = [
+    // ESP32 power to rails
+    { c: "--w-3v3", d: `M235 ${y3v3} H302`, ends: [[235, y3v3], [302, y3v3]] },
+    { c: "--w-gnd", d: `M235 ${yGnd} H334`, ends: [[235, yGnd], [334, yGnd]] },
+    // module power from rails
+    { c: "--w-3v3", d: `M302 ${compass.VCC} H420`, ends: [[302, compass.VCC], [420, compass.VCC]] },
+    { c: "--w-gnd", d: `M334 ${compass.GND} H420`, ends: [[334, compass.GND], [420, compass.GND]] },
+    { c: "--w-3v3", d: `M302 ${gps.VCC} H420`, ends: [[302, gps.VCC], [420, gps.VCC]] },
+    { c: "--w-gnd", d: `M334 ${gps.GND} H420`, ends: [[334, gps.GND], [420, gps.GND]] },
+    // signals
+    { c: "--w-scl", d: `M235 ${yR("D22")} H272 V${compass.SCL} H420`, ends: [[235, yR("D22")], [420, compass.SCL]] },
+    { c: "--w-sda", d: `M235 ${yR("D21")} H272 V${compass.SDA} H420`, ends: [[235, yR("D21")], [420, compass.SDA]] },
+    { c: "--w-rx", d: `M235 ${yR("TX2")} H278 V${gps.RX} H420`, ends: [[235, yR("TX2")], [420, gps.RX]] },
+    { c: "--w-tx", d: `M235 ${yR("RX2")} H262 V${gps.TX} H420`, ends: [[235, yR("RX2")], [420, gps.TX]] },
+  ];
+  for (const w of wires) {
+    el("path", { d: w.d, class: "wire-edge" }, W);
+    el("path", { d: w.d, class: "wire-core", style: `stroke: var(${w.c})` }, W);
+  }
+  for (const w of wires) for (const [x, y] of w.ends) el("circle", { cx: x, cy: y, r: 4.5, class: "end", style: `fill: var(${w.c})` }, W);
+
+  // Checklist progress, remembered per browser
+  const boxes = Array.from(document.querySelectorAll(".steps input[type=checkbox]"));
+  const KEY = "nr-build-guide";
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+  const text = document.getElementById("progText"), bar = document.getElementById("progBar");
+  function refresh() {
+    let n = 0;
+    boxes.forEach((b) => { b.closest("li").classList.toggle("done", b.checked); if (b.checked) n++; });
+    text.textContent = `${n} of ${boxes.length} steps done`;
+    bar.style.width = (boxes.length ? (100 * n / boxes.length) : 0) + "%";
+  }
+  boxes.forEach((b) => {
+    b.checked = !!saved[b.id];
+    b.setAttribute("aria-label", "Done");
+    b.addEventListener("change", () => {
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      refresh();
+    });
+  });
+  refresh();
+})();
+</script>

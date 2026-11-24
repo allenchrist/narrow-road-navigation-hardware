@@ -1,0 +1,9 @@
+{
+  "folders": [
+    { "name": "display-unit", "path": "display-unit" },
+    { "name": "main-unit", "path": "main-unit" },
+    { "name": "camera-unit (esp32-cam)", "path": "camera-unit/esp32-cam" },
+    { "name": "project root", "path": "." }
+  ],
+  "settings": {}
+}

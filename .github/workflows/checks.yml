@@ -20,7 +20,14 @@ jobs:
           for unit in main-unit display-unit camera-unit/esp32-cam; do
             cp $unit/include/secrets.example.h $unit/include/secrets.h
           done
-      - run: pio run -d main-unit
+      - run: pio run -d main-unit -e esp32dev -e esp32-s3
+      - name: Main unit with the BNO085 and BNO055 instead of the compass
+        run: |
+          for imu in IMU_BNO085 IMU_BNO055; do
+            sed -i "s|^#define IMU_COMPASS|// #define IMU_COMPASS|; s|^// #define $imu|#define $imu|" main-unit/include/config.h
+            pio run -d main-unit -e esp32dev
+            git checkout main-unit/include/config.h
+          done
       - run: pio run -d display-unit
       - run: pio run -d camera-unit/esp32-cam
 
@@ -28,6 +35,8 @@ jobs:
         run: |
           g++ -std=c++17 -Wall -Imain-unit/src main-unit/host-tests/test_narrow_detector.cpp \
             main-unit/src/narrow_detector.cpp -o narrow && ./narrow
+          g++ -std=c++17 -Wall -Imain-unit/src main-unit/host-tests/test_heading_math.cpp \
+            main-unit/src/heading_math.cpp -o heading && ./heading
           g++ -std=c++17 -Wall -Idisplay-unit/src \
             -Idisplay-unit/.pio/libdeps/esp32-8048s050/ArduinoJson/src \
             display-unit/host-tests/test_display_logic.cpp display-unit/src/fleet.cpp \
