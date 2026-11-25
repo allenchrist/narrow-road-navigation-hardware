@@ -10,7 +10,8 @@
 //              at an entrance, other cars with queue numbers, hairpins
 //   alert card over the top of the map: icon, title, detail, note, the
 //              give-way road picture and steps
-//   side panel heading, road, vehicles in this road, Mountain Mode, camera
+//   side panel heading, road, vehicles in this road, Mountain Mode, camera,
+//              fuel and battery
 void uiBegin();
 
 void uiShowFleet(const Fleet &fleet);
@@ -21,6 +22,17 @@ void uiShowStatus(bool online, const std::string &problem);
 
 // The camera's latest road width; fresh is false when it's gone quiet
 void uiShowCamera(bool fresh, float widthM, bool wide);
+
+// The heading straight from the main unit on the hotspot (faster than the
+// server, and works without internet). fresh is false when it's gone quiet,
+// and the panel goes back to the server's direction.
+void uiShowLocalHeading(bool fresh, float heading);
+
+// From the health unit. fresh is false when it's gone quiet.
+// percent and litres are -1 when unknown.
+void uiShowFuel(bool fresh, bool ok, bool calibrated, float percent, float litres, bool low);
+void uiShowBattery(bool fresh, bool ok, float volts, float amps, float percent,
+                   float minutesLeft, bool low);
 
 // Call often: clock, flashing danger alerts
 void uiTick();

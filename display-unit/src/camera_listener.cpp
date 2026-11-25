@@ -26,6 +26,43 @@ void CameraListener::update(uint16_t port) {
 
     JsonDocument doc;
     if (deserializeJson(doc, buffer) != DeserializationError::Ok) continue;
+    uint32_t now = millis();
+    if (doc["type"] == "position") {
+      PositionReading p;
+      p.fix = doc["fix"] | false;
+      p.lat = doc["lat"] | 0.0;
+      p.lon = doc["lon"] | 0.0;
+      p.speedMps = doc["speed"] | 0.0f;
+      p.hasHeading = doc["hasHeading"] | false;
+      p.heading = doc["heading"] | 0.0f;
+      p.receivedMs = now;
+      position_ = p;
+      continue;
+    }
+    if (doc["type"] == "fuel") {
+      FuelReading f;
+      f.ok = doc["ok"] | false;
+      f.calibrated = doc["calibrated"] | false;
+      f.percent = doc["percent"] | -1.0f;
+      f.litres = doc["litres"] | -1.0f;
+      f.low = doc["low"] | false;
+      f.receivedMs = now;
+      fuel_ = f;
+      continue;
+    }
+    if (doc["type"] == "battery") {
+      BatteryReading b;
+      b.ok = doc["ok"] | false;
+      b.volts = doc["volts"] | 0.0f;
+      b.amps = doc["amps"] | 0.0f;
+      b.watts = doc["watts"] | 0.0f;
+      b.percent = doc["percent"] | -1.0f;
+      b.minutesLeft = doc["minutesLeft"] | -1.0f;
+      b.low = doc["low"] | false;
+      b.receivedMs = now;
+      battery_ = b;
+      continue;
+    }
     if (doc["type"] != "width") continue;
 
     WidthReading r;

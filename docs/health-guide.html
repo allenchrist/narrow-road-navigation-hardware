@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Health Unit Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Same bench-manual layout as the main unit's guide (build-guide.html) */
+:root {
+  --bg: #f6f7f4;
+  --surface: #ffffff;
+  --ink: #17201b;
+  --muted: #5a665f;
+  --line: #d9ded8;
+  --accent: #1d6b48;
+  --accent-soft: #e3f0e8;
+  --warn: #a4410f;
+  --warn-soft: #fcebdd;
+  --code-bg: #eef1ec;
+  --pcb: #1f3d30;
+  --pcb-ink: #e8f2ec;
+  --rail-plus: #f6d8d8;
+  --rail-minus: #d8e1f6;
+  --w-gnd: #222222;
+  --w-3v3: #d92b2b;
+  --w-trig: #f08c00;
+  --w-echo: #8e44ad;
+  --w-sda: #2563eb;
+  --w-scl: #ffffff;
+  --w-bat: #c2410c;
+  --w-edge: #3a4540;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111613; --surface: #182019; --ink: #e5ece7; --muted: #9aa8a0; --line: #2c3730;
+    --accent: #5cc893; --accent-soft: #1d3327; --warn: #f0a070; --warn-soft: #3a2518;
+    --code-bg: #1f2923; --pcb: #234836; --pcb-ink: #e8f2ec;
+    --rail-plus: #4a2626; --rail-minus: #26324a;
+    --w-gnd: #111111; --w-3v3: #ef4b4b; --w-trig: #ffa94d; --w-echo: #b57edc; --w-sda: #5b8cff; --w-scl: #f4f4f4; --w-bat: #fb923c; --w-edge: #8a978f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111613; --surface: #182019; --ink: #e5ece7; --muted: #9aa8a0; --line: #2c3730;
+  --accent: #5cc893; --accent-soft: #1d3327; --warn: #f0a070; --warn-soft: #3a2518;
+  --code-bg: #1f2923; --pcb: #234836; --pcb-ink: #e8f2ec;
+  --rail-plus: #4a2626; --rail-minus: #26324a;
+  --w-gnd: #111111; --w-3v3: #ef4b4b; --w-trig: #ffa94d; --w-echo: #b57edc; --w-sda: #5b8cff; --w-scl: #f4f4f4; --w-bat: #fb923c; --w-edge: #8a978f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; padding-block: 40px 80px; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; font-size: 14px; }
+nav.toc .label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: s -1; }
+nav.toc li { counter-increment: s; }
+nav.toc a { display: flex; gap: 10px; padding: 4px 8px; border-radius: 6px; color: var(--ink); text-decoration: none; }
+nav.toc a::before { content: counter(s); font-family: var(--font-mono); color: var(--muted); min-width: 1.4em; }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--accent-soft); outline: none; }
+nav.toc .progress { margin-top: 16px; font-size: 13px; color: var(--muted); }
+nav.toc .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+nav.toc .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+nav.toc .other { margin-top: 14px; font-size: 13px; }
+
+main { min-width: 0; }
+header.intro { margin-bottom: 40px; }
+header.intro .eyebrow { font-family: var(--font-mono); font-size: 13px; color: var(--accent); letter-spacing: .04em; }
+h1 { font-size: clamp(30px, 5vw, 42px); line-height: 1.15; margin: 8px 0 16px; text-wrap: balance; font-weight: 700; }
+header.intro p { max-width: 65ch; color: var(--muted); font-size: 18px; margin: 0 0 10px; }
+
+section.stage { border-top: 1px solid var(--line); padding-block: 36px 8px; scroll-margin-top: 16px; }
+.stage-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+.stage-no { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 2px 9px; border-radius: 5px; }
+h2 { font-size: 26px; line-height: 1.25; margin: 0; text-wrap: balance; }
+h3 { font-size: 18px; margin: 28px 0 8px; }
+p, li { max-width: 68ch; }
+.time { font-size: 13px; color: var(--muted); }
+a { color: var(--accent); }
+code, kbd, .mono { font-family: var(--font-mono); font-size: .9em; }
+code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+kbd { border: 1px solid var(--line); border-bottom-width: 2px; padding: 0 6px; border-radius: 4px; background: var(--surface); }
+pre { background: var(--code-bg); padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.5; margin: 12px 0; }
+pre code { background: none; padding: 0; }
+
+.callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; max-width: 72ch; }
+.callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+.callout strong:first-child { display: block; margin-bottom: 2px; }
+.callout p { margin: 4px 0; }
+
+.table-box { overflow-x: auto; margin: 14px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; background: var(--code-bg); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-family: var(--font-mono); color: var(--muted); width: 2.5em; font-variant-numeric: tabular-nums; }
+
+.wire { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.wire::before { content: ""; width: 26px; height: 8px; border-radius: 4px; background: var(--c); border: 1.5px solid var(--w-edge); }
+
+.steps { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 10px; counter-reset: st; }
+.steps > li { counter-increment: st; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.steps > li > input { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--accent); cursor: pointer; }
+.steps > li > div { min-width: 0; }
+.steps > li > div > :first-child { margin-top: 0; }
+.steps > li > div > :last-child { margin-bottom: 0; }
+.steps > li.done { opacity: .6; }
+.steps > li.done > div > b:first-child { text-decoration: line-through; }
+
+.figure { margin: 18px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
+.figure svg { display: block; width: 100%; height: auto; min-width: 560px; }
+.figure figcaption, .figcap { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 14px 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.card h4 { margin: 0 0 4px; font-size: 16px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: 2px; }
+.tag.no { background: var(--code-bg); color: var(--muted); }
+
+dl.gloss { display: grid; grid-template-columns: minmax(110px, max-content) minmax(0, 1fr); gap: 6px 18px; margin: 12px 0; }
+dl.gloss dt { font-weight: 600; font-family: var(--font-mono); font-size: 15px; }
+dl.gloss dd { margin: 0; color: var(--ink); }
+
+/* SVG theming */
+.svg-text { fill: var(--ink); font-family: var(--font-mono); font-size: 13px; }
+.svg-muted { fill: var(--muted); font-family: var(--font-body); font-size: 12px; }
+.svg-label { fill: var(--ink); font-family: var(--font-body); font-size: 14px; font-weight: 600; }
+.pcb { fill: var(--pcb); }
+.pcb-text { fill: var(--pcb-ink); font-family: var(--font-mono); font-size: 12px; }
+.pcb-dim { fill: var(--pcb-ink); opacity: .45; font-family: var(--font-mono); font-size: 12px; }
+.box { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.mod-blue { fill: #1e4fa0; }
+.mod-teal { fill: #137a86; }
+.mod-text { fill: #ffffff; font-family: var(--font-mono); font-size: 12px; }
+.pin { fill: #c9a227; stroke: #7a5f10; stroke-width: 1; }
+.pin-dim { fill: #8f9a94; opacity: .5; }
+.wire-edge { fill: none; stroke: var(--w-edge); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.wire-core { fill: none; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+.end { stroke: var(--w-edge); stroke-width: 1.5; }
+.rail-p { fill: var(--rail-plus); }
+.rail-m { fill: var(--rail-minus); }
+.tank { fill: none; stroke: var(--ink); stroke-width: 2; }
+.water { fill: #3b82f6; opacity: .35; }
+.beam { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 5; }
+
+@media (max-width: 860px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 24px 64px; }
+  nav.toc { position: static; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  nav.toc ol { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+@media (max-width: 480px) {
+  dl.gloss { grid-template-columns: minmax(0, 1fr); }
+  dl.gloss dd { margin-bottom: 8px; }
+  h2 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <div class="label">Stages</div>
+  <ol>
+    <li><a href="#start">What you have</a></li>
+    <li><a href="#words">Words you'll see</a></li>
+    <li><a href="#prepare">Prepare the parts</a></li>
+    <li><a href="#pins">Find the pins</a></li>
+    <li><a href="#wiring">Connect the wires</a></li>
+    <li><a href="#settings">Open it and fill in settings</a></li>
+    <li><a href="#upload">Load the code</a></li>
+    <li><a href="#monitor">Read the messages</a></li>
+    <li><a href="#tank">Set up the tank</a></li>
+    <li><a href="#screen">See it on the screen</a></li>
+    <li><a href="#battery">Add the battery (later)</a></li>
+    <li><a href="#everyday">Every time after</a></li>
+    <li><a href="#trouble">When something's wrong</a></li>
+    <li><a href="#safety">Safety</a></li>
+  </ol>
+  <div class="progress"><span id="progText">0 of 0 steps done</span><div class="bar"><i id="progBar"></i></div></div>
+  <div class="other">Other guides: <a href="build-guide.html">main unit</a> · <a href="camera-guide.html">camera</a></div>
+</nav>
+
+<main>
+<header class="intro">
+  <div class="eyebrow">Narrow Road Navigation · health unit</div>
+  <h1>Building the health unit: fuel level and battery readings</h1>
+  <p>A second ESP32 that measures how full a demo tank is and how much charge the battery has, and sends both to the car screen over the hotspot. Every step, in order, for someone who's never wired anything before.</p>
+  <p>Tick each step as you finish it; your ticks are remembered in this browser. If a step doesn't turn out as described, stop there and send the message or a photo to Claude. The main unit (GPS and compass) has <a href="build-guide.html">its own guide</a>, and keeps working exactly as before.</p>
+</header>
+
+<!-- 0 -->
+<section class="stage" id="start">
+  <div class="stage-head"><span class="stage-no">0</span><h2>What you have, and what each part does</h2></div>
+  <div class="grid2">
+    <div class="card"><h4>Second ESP32 DevKit <span class="tag">gets the code</span></h4><p>The same kind of board as the main unit, but a separate one. It reads the two sensors, works out fuel % and battery %, and sends them over Wi-Fi once a second.</p></div>
+    <div class="card"><h4>HC-SR04 ultrasonic <span class="tag no">no code</span></h4><p>The board with two silver "eyes". One sends a click of sound too high to hear; the other hears the echo. The time it takes tells the ESP32 how far away the liquid is.</p></div>
+    <div class="card"><h4>INA219 current sensor <span class="tag no">no code</span></h4><p>The small board with the green screw terminal and the <b>R100</b> resistor. Put in the battery's + wire, it measures the battery's voltage and how much current flows out.</p></div>
+    <div class="card"><h4>Buck converter <span class="tag no">later</span></h4><p>Turns the battery's higher voltage down to 5 V for the ESP32. Only needed once you run on the battery (stage 10). It must be set with a multimeter first.</p></div>
+    <div class="card"><h4>Demo tank <span class="tag no">no code</span></h4><p>A plastic box or wide bottle of <b>water</b>, at least 10 cm across and 10 cm deep. Never a real fuel tank: see <a href="#safety">Safety</a>.</p></div>
+    <div class="card"><h4>4 × 18650 cells <span class="tag no">later</span></h4><p>Leave them in the bag until stage 10. Everything before that runs from the laptop's USB.</p></div>
+  </div>
+  <h3>You also need</h3>
+  <ul>
+    <li>A <b>breadboard</b> and <b>jumper wires</b> (a second breadboard, or the free end of the main one).</li>
+    <li>Your <b>laptop</b> with VS Code and PlatformIO, already set up for the main unit.</li>
+    <li>A <b>USB data cable</b>: the one that works with the main unit is perfect.</li>
+    <li>Your <b>phone's hotspot</b>, the same one the main unit uses.</li>
+    <li>For stage 10 only: a <b>multimeter</b> (about ₹300) and a <b>battery holder</b> for the 18650 cells.</li>
+  </ul>
+</section>
+
+<!-- 1 -->
+<section class="stage" id="words">
+  <div class="stage-head"><span class="stage-no">1</span><h2>Words you'll see</h2></div>
+  <dl class="gloss">
+    <dt>Trig</dt><dd>"Trigger": the ESP32 pulses this pin for 10 millionths of a second to make the sensor send its click of sound.</dd>
+    <dt>Echo</dt><dd>The sensor holds this pin high for as long as the sound took to go to the liquid and come back.</dd>
+    <dt>SDA / SCL</dt><dd>The two wires of <b>I2C</b>, how the INA219 talks, exactly like the compass on the main unit. SDA to SDA, SCL to SCL.</dd>
+    <dt>Vin+ / Vin−</dt><dd>The INA219's two big screw terminals (and the two pins of the same name). The battery's current flows in at Vin+ and out at Vin−.</dd>
+    <dt>Shunt</dt><dd>The tiny 0.1 Ω resistor marked <b>R100</b>. Current through it makes a very small voltage that the INA219 measures.</dd>
+    <dt>Series</dt><dd>Cells joined + to −, one after another. Voltages add up: 4 in series is 4 × 3.7 = 14.8 V.</dd>
+    <dt>Parallel</dt><dd>Cells side by side, + to + and − to −. Same voltage, more capacity.</dd>
+    <dt>mAh</dt><dd>How much charge a cell holds. 3000 mAh gives 300 mA for 10 hours.</dd>
+    <dt>Broadcast</dt><dd>A message sent to every device on the hotspot at once. The car screen listens for it.</dd>
+  </dl>
+</section>
+
+<!-- 2 -->
+<section class="stage" id="prepare">
+  <div class="stage-head"><span class="stage-no">2</span><h2>Prepare the parts</h2></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="h-prep-pins"><div><b>Check both sensor boards have their pins fixed on.</b>
+      <p>Your HC-SR04 has 4 pins and the INA219 a row of 6, already soldered. Look under each: every pin should have its own shiny solder cone, none touching its neighbour. Loose pins only resting in the holes cause readings that come and go, like the compass did.</p></div></li>
+    <li><input type="checkbox" id="h-prep-version"><div><b>Check which HC-SR04 you have.</b>
+      <p>Turn it over. If the back shows <code>Trig/Rx/SCL</code>, <code>Echo/Tx/SDA</code> and <code>R4/IIC R8/UART</code> (yours does), it's the newer version that works on <b>3.3 V</b>. That's why it can share the 3V3 rail and its Echo pin is safe for the ESP32 without any extra resistors.</p>
+      <p>If you ever use an older one marked only <code>HC-SR04</code> with no such text, it needs 5 V and a resistor divider on Echo. Ask Claude before wiring that one.</p></div></li>
+    <li><input type="checkbox" id="h-prep-tank"><div><b>Pick the demo tank.</b>
+      <p>A plastic box or a wide-mouth bottle, at least <b>10 cm across</b>, so the sound doesn't bounce off the sides, and as tall as you like. Don't fill it yet.</p></div></li>
+    <li><input type="checkbox" id="h-prep-table"><div><b>Clear a table, away from the water.</b>
+      <p>Wire everything on a dry, non-metal surface. Keep the USB <b>unplugged</b> until stage 6.</p></div></li>
+  </ol>
+</section>
+
+<!-- 3 -->
+<section class="stage" id="pins">
+  <div class="stage-head"><span class="stage-no">3</span><h2>Find the pins on each board</h2></div>
+  <p>Always go by the <b>printed name</b> beside each pin, not by counting positions.</p>
+
+  <h3>ESP32 DevKit (30 pins)</h3>
+  <p>Hold it as before: USB at the bottom, metal can at the top. Again you use <b>only the right-hand side</b>, the side whose bottom pin is <code>3V3</code>.</p>
+  <div class="table-box"><table>
+    <thead><tr><th>Left side, top → bottom</th><th>Right side, top → bottom</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">EN</td><td class="mono">D23</td><td></td></tr>
+      <tr><td class="mono">VP</td><td class="mono"><b>D22</b></td><td><span class="wire" style="--c: var(--w-scl)">INA219 SCL</span></td></tr>
+      <tr><td class="mono">VN</td><td class="mono">TX0</td><td>leave empty: the USB uses it</td></tr>
+      <tr><td class="mono">D34</td><td class="mono">RX0</td><td>leave empty: the USB uses it</td></tr>
+      <tr><td class="mono">D35</td><td class="mono"><b>D21</b></td><td><span class="wire" style="--c: var(--w-sda)">INA219 SDA</span></td></tr>
+      <tr><td class="mono">D32</td><td class="mono">D19</td><td></td></tr>
+      <tr><td class="mono">D33</td><td class="mono"><b>D18</b></td><td><span class="wire" style="--c: var(--w-echo)">HC-SR04 Echo</span></td></tr>
+      <tr><td class="mono">D25</td><td class="mono"><b>D5</b></td><td><span class="wire" style="--c: var(--w-trig)">HC-SR04 Trig</span></td></tr>
+      <tr><td class="mono">D26</td><td class="mono">TX2</td><td></td></tr>
+      <tr><td class="mono">D27</td><td class="mono">RX2</td><td></td></tr>
+      <tr><td class="mono">D14</td><td class="mono">D4</td><td></td></tr>
+      <tr><td class="mono">D12</td><td class="mono">D2</td><td>(the blue LED on the board)</td></tr>
+      <tr><td class="mono">D13</td><td class="mono">D15</td><td></td></tr>
+      <tr><td class="mono">GND</td><td class="mono"><b>GND</b></td><td><span class="wire" style="--c: var(--w-gnd)">to the − rail</span></td></tr>
+      <tr><td class="mono">VIN</td><td class="mono"><b>3V3</b></td><td><span class="wire" style="--c: var(--w-3v3)">to the + rail</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><strong>The pins say G5 or IO18 instead?</strong>
+    <p>Some boards print <code>G5</code>, <code>IO5</code> or <code>GPIO5</code> for <code>D5</code>. They're the same pin. Look for the numbers 5, 18, 21 and 22.</p></div>
+
+  <div class="grid2">
+    <div class="card"><h4>HC-SR04: 4 pins</h4><p><code>VCC</code> power in · <code>Trig</code> start a reading · <code>Echo</code> the answer · <code>GND</code> ground</p></div>
+    <div class="card"><h4>INA219: 6 pins + 2 screws</h4><p><code>VCC</code> power in · <code>GND</code> ground · <code>SCL</code> clock · <code>SDA</code> data · <code>Vin−</code> and <code>Vin+</code>: the battery path, used in stage 10. The green screw terminal is the same Vin+ and Vin−, for thicker wires.</p></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="stage" id="wiring">
+  <div class="stage-head"><span class="stage-no">4</span><h2>Connect the wires</h2><span class="time">about 15 minutes</span></div>
+  <div class="callout warn"><strong>USB unplugged the whole time</strong><p>Never add or move a wire while the ESP32 has power. Remember the GPS short circuit: one wrong wire into a rail can make the ESP32's regulator hot in seconds.</p></div>
+
+  <figure class="figure">
+    <svg viewBox="0 0 900 610" role="img" aria-label="Wiring diagram: ESP32 3V3 to plus rail, GND to minus rail, INA219 and HC-SR04 powered from the rails, INA219 SDA to D21 and SCL to D22, HC-SR04 Trig to D5 and Echo to D18">
+      <rect x="30" y="30" width="220" height="545" rx="10" class="pcb"/>
+      <rect x="85" y="44" width="110" height="70" rx="4" fill="#9aa4a0" opacity=".85"/>
+      <text x="140" y="76" text-anchor="middle" class="mod-text" style="fill:#1a1a1a">ESP32</text>
+      <text x="140" y="92" text-anchor="middle" class="mod-text" style="fill:#1a1a1a;font-size:10px">health unit</text>
+      <polyline points="95,40 105,34 115,40 125,34 135,40 145,34 155,40 165,34 175,40 185,34" fill="none" stroke="#c9a227" stroke-width="2"/>
+      <rect x="110" y="560" width="60" height="26" rx="4" fill="#b8bfbb" stroke="#6b726e"/>
+      <text x="140" y="603" text-anchor="middle" class="svg-muted">USB</text>
+      <g id="esppins"></g>
+      <rect x="292" y="40" width="20" height="530" rx="5" class="rail-p"/>
+      <rect x="324" y="40" width="20" height="530" rx="5" class="rail-m"/>
+      <text x="302" y="34" text-anchor="middle" class="svg-text" font-weight="600">+</text>
+      <text x="334" y="34" text-anchor="middle" class="svg-text" font-weight="600">−</text>
+      <!-- INA219 -->
+      <rect x="420" y="50" width="210" height="210" rx="8" class="mod-teal"/>
+      <text x="560" y="140" text-anchor="middle" class="mod-text" style="font-size:15px;font-weight:600">INA219</text>
+      <text x="560" y="160" text-anchor="middle" class="mod-text">current sensor</text>
+      <rect x="532" y="178" width="56" height="16" rx="2" fill="#1a1a1a"/>
+      <text x="560" y="190" text-anchor="middle" class="mod-text" style="font-size:10px">R100</text>
+      <rect x="600" y="205" width="50" height="40" rx="3" fill="#3fa34d" stroke="#1f5d28"/>
+      <text x="660" y="222" class="svg-muted">screw terminal</text>
+      <text x="660" y="238" class="svg-muted">(battery, stage 10)</text>
+      <!-- HC-SR04 -->
+      <rect x="420" y="320" width="210" height="200" rx="8" class="mod-blue"/>
+      <text x="545" y="350" text-anchor="middle" class="mod-text" style="font-size:15px;font-weight:600">HC-SR04</text>
+      <circle cx="580" cy="400" r="30" fill="#c8ccc9" stroke="#6b726e" stroke-width="2"/>
+      <circle cx="580" cy="400" r="18" fill="#9aa09c"/>
+      <circle cx="580" cy="475" r="30" fill="#c8ccc9" stroke="#6b726e" stroke-width="2"/>
+      <circle cx="580" cy="475" r="18" fill="#9aa09c"/>
+      <text x="625" y="404" class="mod-text" style="font-size:11px">T</text>
+      <text x="625" y="479" class="mod-text" style="font-size:11px">R</text>
+      <g id="modpins"></g>
+      <g id="wires"></g>
+      <text x="660" y="560" class="svg-muted">The sensor's eyes face down</text>
+      <text x="660" y="576" class="svg-muted">into the tank (stage 8)</text>
+    </svg>
+    <figcaption>Wire colours match the table below. A wire drawn across a rail just passes over it; it only connects where it ends in a dot. The INA219's Vin+ and Vin− stay empty for now.</figcaption>
+  </figure>
+
+  <h3>Where to place each board</h3>
+  <ol class="steps">
+    <li><input type="checkbox" id="h-place-esp"><div><b>ESP32 across the middle gap, at one end of the breadboard,</b> with the <code>3V3</code> / <code>D22</code> side facing the free row of holes, as on the main unit. Press down on both ends, not on the metal can.</div></li>
+    <li><input type="checkbox" id="h-place-ina"><div><b>INA219 further along,</b> each of its 6 pins in a different numbered row.</div></li>
+    <li><input type="checkbox" id="h-place-us"><div><b>HC-SR04 on long female-to-male jumpers,</b> not in the breadboard. It has to sit over the tank later, so give it wires long enough to reach: slide the female ends onto its 4 pins.</div></li>
+  </ol>
+
+  <h3>The 8 wires</h3>
+  <p>"+ rail" and "− rail" mean any hole along those long strips on the same side as the ESP32's 3V3 pin. To connect to a pin, use a hole in the <b>same numbered row and same side</b> as that pin.</p>
+  <div class="table-box"><table>
+    <thead><tr><th>#</th><th>From</th><th>To</th><th>Colour</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>ESP32 <b>3V3</b></td><td><b>+ rail</b></td><td><span class="wire" style="--c: var(--w-3v3)">red</span></td><td>Puts 3.3 V on the + rail</td></tr>
+      <tr><td class="num">2</td><td>ESP32 <b>GND</b> (right side)</td><td><b>− rail</b></td><td><span class="wire" style="--c: var(--w-gnd)">black</span></td><td>Puts ground on the − rail</td></tr>
+      <tr><td class="num">3</td><td>INA219 <b>VCC</b></td><td><b>+ rail</b></td><td><span class="wire" style="--c: var(--w-3v3)">red</span></td><td>Powers the INA219</td></tr>
+      <tr><td class="num">4</td><td>INA219 <b>GND</b></td><td><b>− rail</b></td><td><span class="wire" style="--c: var(--w-gnd)">black</span></td><td>INA219 ground</td></tr>
+      <tr><td class="num">5</td><td>INA219 <b>SDA</b></td><td>ESP32 <b>D21</b></td><td><span class="wire" style="--c: var(--w-sda)">blue</span></td><td>INA219 data</td></tr>
+      <tr><td class="num">6</td><td>INA219 <b>SCL</b></td><td>ESP32 <b>D22</b></td><td><span class="wire" style="--c: var(--w-scl)">white</span></td><td>INA219 clock</td></tr>
+      <tr><td class="num">7</td><td>HC-SR04 <b>VCC</b> and <b>GND</b></td><td><b>+ rail</b> and <b>− rail</b></td><td><span class="wire" style="--c: var(--w-3v3)">red</span> <span class="wire" style="--c: var(--w-gnd)">black</span></td><td>Powers the sensor (two wires)</td></tr>
+      <tr><td class="num">8</td><td>HC-SR04 <b>Trig</b> and <b>Echo</b></td><td>ESP32 <b>D5</b> and <b>D18</b></td><td><span class="wire" style="--c: var(--w-trig)">orange</span> <span class="wire" style="--c: var(--w-echo)">purple</span></td><td>Trig starts a reading; Echo brings the answer back</td></tr>
+    </tbody>
+  </table></div>
+  <p class="figcap">Rows 7 and 8 are two wires each, so 10 wires in all. If your wires come in other colours, keep red for power and black for ground.</p>
+
+  <h3>Check before power</h3>
+  <ol class="steps">
+    <li><input type="checkbox" id="h-check-short"><div><b>No wire joins the + rail to the − rail,</b> and nothing goes into the same row as both 3V3 and GND.</div></li>
+    <li><input type="checkbox" id="h-check-swap"><div><b>VCC and GND aren't swapped</b> on either sensor. Read the printed labels again: this caused the GPS short circuit last time.</div></li>
+    <li><input type="checkbox" id="h-check-i2c"><div><b>SDA goes to D21 and SCL to D22</b>, and <b>Trig to D5, Echo to D18</b>.</div></li>
+    <li><input type="checkbox" id="h-check-firm"><div><b>Tug each wire gently.</b> None comes out.</div></li>
+    <li><input type="checkbox" id="h-check-nobatt"><div><b>Nothing is in the INA219's Vin+, Vin− or screw terminal,</b> and no battery is anywhere near. Power comes from USB only.</div></li>
+  </ol>
+</section>
+
+<!-- 5 -->
+<section class="stage" id="settings">
+  <div class="stage-head"><span class="stage-no">5</span><h2>Open it and fill in your settings</h2><span class="time">5 minutes</span></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="h-set-open"><div><b>Open the project workspace in VS Code.</b>
+      <p><b>File → Open Workspace from File…</b> and choose <code>narrow-road.code-workspace</code> in the project folder. The Explorer on the left now lists <b>health-unit</b> next to main-unit and display-unit. If you already had it open, it may ask to reload: click <b>Reload</b>.</p></div></li>
+    <li><input type="checkbox" id="h-set-secrets"><div><b>Fill in <code>health-unit/include/secrets.h</code>.</b>
+      <p>Open it and put in the <b>same hotspot name and password</b> as the main unit's <code>secrets.h</code>, inside the quotes:</p>
+<pre><code>#define WIFI_SSID "your-hotspot-name"
+#define WIFI_PASSWORD "your-hotspot-password"</code></pre>
+      <p>Save with <kbd>Ctrl</kbd> + <kbd>S</kbd>. The health unit needs no account: it never talks to the server. This file never goes to GitHub.</p></div></li>
+  </ol>
+  <div class="callout"><strong>Nothing to change in config.h</strong>
+    <p><code>health-unit/include/config.h</code> already has the pins above, and starts the battery at 4 cells in series, 3000 mAh. You'll change those by typing commands in stage 10, not by editing files.</p></div>
+</section>
+
+<!-- 6 -->
+<section class="stage" id="upload">
+  <div class="stage-head"><span class="stage-no">6</span><h2>Load the code onto the ESP32</h2><span class="time">2–5 minutes</span></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="h-up-plug"><div><b>Plug in the health unit's ESP32</b> with the USB data cable. Its red power light comes on.
+      <p>Unplug the main unit while you do this, so you can't upload to the wrong board. The health unit's ESP32 may get a different COM number, which is fine: PlatformIO finds it.</p></div></li>
+    <li><input type="checkbox" id="h-up-env"><div><b>PlatformIO panel → health-unit → esp32dev → General.</b>
+      <p>Click the ant-head icon. Under <b>Project Tasks</b> there's now a <b>health-unit</b> group. Make sure it's that one, not main-unit.</p></div></li>
+    <li><input type="checkbox" id="h-up-upload"><div><b>Click Upload</b> and wait for <span class="mono">[SUCCESS]</span>.
+      <p>If it sticks at <span class="mono">Connecting.....</span>, hold the <b>BOOT</b> button until "Writing" appears. If it says <span class="mono">could not open port</span>, close any open Monitor and try again.</p></div></li>
+    <li><input type="checkbox" id="h-up-monitor"><div><b>Click Monitor</b>, then press <b>EN</b> on the ESP32 to see the messages from the start.</div></li>
+  </ol>
+</section>
+
+<!-- 7 -->
+<section class="stage" id="monitor">
+  <div class="stage-head"><span class="stage-no">7</span><h2>Read the messages</h2></div>
+  <p>With the hotspot on and the sensor pointing at the table or a wall, a good start looks like this:</p>
+<pre><code>Narrow Road Navigation: health unit
+[Tank] empty 0.0 cm, full 0.0 cm, capacity not set | not calibrated: type empty, then full
+[Battery] 4 cells in series, 3000 mAh
+[Battery] INA219 ready
+Type help for the tank and battery commands
+[Wi-Fi] Connected, address 10.40.78.70; sending to the screen on port 4210
+[Status] fuel: 21.4 cm | battery: no battery (0.00 V) | Wi-Fi: connected</code></pre>
+  <p>A <b>[Status]</b> line comes every 5 seconds. Here's what each part means:</p>
+  <div class="table-box"><table>
+    <thead><tr><th>You see</th><th>Meaning</th><th>If it's wrong</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">INA219 ready</td><td>Wires 3–6 are right</td><td><span class="mono">INA219 not found</span>: check VCC, GND, and that SDA is on D21 and SCL on D22 (not swapped)</td></tr>
+      <tr><td class="mono">fuel: 21.4 cm</td><td>The sensor works. Move your hand towards it and the number shrinks</td><td><span class="mono">no echo</span>: check wires 7–8; is Trig on D5 and Echo on D18? Point it at something flat 5 cm to 2 m away</td></tr>
+      <tr><td class="mono">no battery (0.00 V)</td><td>Correct for now: no battery is connected</td><td><span class="mono">INA219 missing</span>: see the first row</td></tr>
+      <tr><td class="mono">Wi-Fi: connected</td><td>It's on the hotspot and sending</td><td><span class="mono">not connected</span>: hotspot on? Name and password in <code>secrets.h</code> exact? Did you Upload again after saving it?</td></tr>
+    </tbody>
+  </table></div>
+  <p>To watch the numbers live, type <code>watch</code> and press <kbd>Enter</kbd>: 5 lines a second. Press <kbd>Enter</kbd> again to stop. <code>help</code> lists every command.</p>
+</section>
+
+<!-- 8 -->
+<section class="stage" id="tank">
+  <div class="stage-head"><span class="stage-no">8</span><h2>Set up the demo tank</h2><span class="time">10 minutes</span></div>
+
+  <figure class="figure">
+    <svg viewBox="0 0 720 300" role="img" aria-label="The ultrasonic sensor sits above the tank looking down. The distance to the bottom is the empty distance; to the surface when full is the full distance; at least 2 cm stays between the sensor and the full mark.">
+      <rect x="170" y="30" width="120" height="34" rx="5" class="mod-blue"/>
+      <circle cx="205" cy="64" r="13" fill="#c8ccc9" stroke="#6b726e" stroke-width="2"/>
+      <circle cx="255" cy="64" r="13" fill="#c8ccc9" stroke="#6b726e" stroke-width="2"/>
+      <text x="230" y="52" text-anchor="middle" class="mod-text" style="font-size:11px">HC-SR04</text>
+      <line x1="230" y1="78" x2="230" y2="270" class="beam"/>
+      <path d="M100 100 V275 H360 V100" class="tank"/>
+      <rect x="102" y="170" width="256" height="104" class="water"/>
+      <line x1="95" y1="125" x2="365" y2="125" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="372" y="129" class="svg-muted">full mark</text>
+      <!-- dimension: empty -->
+      <line x1="440" y1="80" x2="440" y2="273" stroke="var(--ink)" stroke-width="1.5"/>
+      <line x1="432" y1="80" x2="448" y2="80" stroke="var(--ink)" stroke-width="1.5"/>
+      <line x1="432" y1="273" x2="448" y2="273" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="456" y="180" class="svg-label">empty distance</text>
+      <text x="456" y="198" class="svg-muted">type <tspan class="svg-text">empty</tspan> with the tank empty</text>
+      <!-- dimension: full -->
+      <line x1="410" y1="80" x2="410" y2="125" stroke="var(--accent)" stroke-width="1.5"/>
+      <line x1="402" y1="125" x2="418" y2="125" stroke="var(--accent)" stroke-width="1.5"/>
+      <text x="456" y="100" class="svg-label">full distance</text>
+      <text x="456" y="118" class="svg-muted">type <tspan class="svg-text">full</tspan> with it filled to the mark</text>
+      <text x="230" y="292" text-anchor="middle" class="svg-muted">fuel % = how far the surface has risen from empty towards full</text>
+    </svg>
+    <figcaption>The sensor never touches the water. It only measures the distance down to the surface.</figcaption>
+  </figure>
+
+  <ol class="steps">
+    <li><input type="checkbox" id="h-tank-mount"><div><b>Fix the sensor above the tank, eyes pointing straight down.</b>
+      <p>Tape or clip it to a strip of cardboard or wood laid across the top. Keep the eyes in the middle, away from the walls, and the circuit board <b>above</b> the rim so splashes can't reach it.</p></div></li>
+    <li><input type="checkbox" id="h-tank-gap"><div><b>Decide your "full" mark at least 2 cm below the sensor,</b> and mark it on the tank with a pen. The sensor can't measure anything closer than 2 cm.</div></li>
+    <li><input type="checkbox" id="h-tank-empty"><div><b>With the tank empty, type <code>empty</code> and press Enter.</b>
+<pre><code>[Tank] Saved: empty is 22.6 cm from the sensor</code></pre></div></li>
+    <li><input type="checkbox" id="h-tank-full"><div><b>Fill the tank with water to the mark, wait for the ripples to settle, then type <code>full</code>.</b>
+<pre><code>[Tank] Saved: full is 4.1 cm from the sensor</code></pre>
+      <p>If it says <span class="mono">Full must be at least 2 cm closer than empty</span>, the sensor didn't see the water properly. Check it points straight down, then do <code>empty</code> and <code>full</code> again.</p></div></li>
+    <li><input type="checkbox" id="h-tank-litres"><div><b>Optional: tell it how much the tank holds when full,</b> to see litres as well. For a 2-litre bottle, type <code>litres 2</code>.</div></li>
+    <li><input type="checkbox" id="h-tank-test"><div><b>Test it.</b> Type <code>watch</code>, then pour out about half the water. The fuel % drops to about 50. Press Enter to stop watching.
+<pre><code>[Watch] fuel: 13.2 cm, 51%, 1.02 L | battery: no battery (0.00 V)</code></pre></div></li>
+  </ol>
+  <div class="callout"><strong>Why it doesn't jump around</strong>
+    <p>The sensor takes a reading every 60 ms, and the ESP32 uses the <b>middle</b> value of the last 7. One stray echo off a ripple can't move it. Below 15%, the screen marks the fuel <b>LOW</b> in red.</p></div>
+  <p>All of these are saved inside the ESP32, so they survive unplugging. <code>reset</code> forgets them.</p>
+</section>
+
+<!-- 9 -->
+<section class="stage" id="screen">
+  <div class="stage-head"><span class="stage-no">9</span><h2>See it on the screen</h2></div>
+  <p>Once a second, the health unit sends two short messages to everything on the hotspot:</p>
+<pre><code>{"type":"fuel","ok":true,"calibrated":true,"percent":51.0,"litres":1.02,...}
+{"type":"battery","ok":false,"volts":0.00,"amps":0.000,"percent":-1,...}</code></pre>
+  <p>The car screen listens for them and shows them in its side panel, under <b>FUEL • BATTERY</b>:</p>
+<pre><code>FUEL • BATTERY
+Fuel 51% • 1.0 L
+Battery: not connected</code></pre>
+  <ul>
+    <li>The screen isn't bought yet. Until then, the Monitor shows the same numbers.</li>
+    <li>The phone's <b>hotspot must be on</b>: it's the "room" the units talk in. The health unit doesn't need mobile data.</li>
+    <li>Nothing goes to the Render server, so the website doesn't change. Fuel and battery appear only on the car screen.</li>
+  </ul>
+</section>
+
+<!-- 10 -->
+<section class="stage" id="battery">
+  <div class="stage-head"><span class="stage-no">10</span><h2>Add the battery (later)</h2><span class="time">30 minutes, with a multimeter</span></div>
+  <div class="callout warn"><strong>Only with a multimeter, a battery holder, and the USB unplugged</strong>
+    <p>Li-ion cells can deliver a lot of current. A short across a cell melts wires and can start a fire. Never solder or tape wires to cells; always use a holder.</p></div>
+
+  <h3>Choose how to join the cells</h3>
+  <div class="table-box"><table>
+    <thead><tr><th>Layout</th><th>Voltage (empty → full)</th><th>Type</th><th>Can power the ESP32 through the buck converter?</th></tr></thead>
+    <tbody>
+      <tr><td><b>4 in series</b> (4S), 4-cell series holder</td><td>12.0 → 16.8 V</td><td class="mono">cells 4<br>mah 3000</td><td>Yes. Needs a 4S charger to recharge</td></tr>
+      <tr><td><b>2 in series</b> (2S), one cell measured</td><td>6.0 → 8.4 V</td><td class="mono">cells 2<br>mah 3000</td><td>Yes, until about 6.5 V</td></tr>
+      <tr><td><b>1 cell</b> (or all in parallel)</td><td>3.0 → 4.2 V</td><td class="mono">cells 1<br>mah 3000</td><td><b>No</b>: a buck converter only lowers voltage. Keep the ESP32 on USB; the INA219 still measures</td></tr>
+    </tbody>
+  </table></div>
+  <p><code>mah</code> is the capacity of one series string: two strings side by side would be <code>mah 6000</code>.</p>
+
+  <h3>The battery wiring</h3>
+  <figure class="figure">
+    <svg viewBox="0 0 860 280" role="img" aria-label="Battery plus to INA219 Vin plus; Vin minus to buck converter IN plus; battery minus to buck IN minus and the ESP32 ground rail; buck OUT plus to ESP32 VIN and OUT minus to GND">
+      <rect x="20" y="70" width="140" height="110" rx="8" class="box"/>
+      <text x="90" y="118" text-anchor="middle" class="svg-label">Battery</text>
+      <text x="90" y="138" text-anchor="middle" class="svg-muted">in a holder</text>
+      <text x="168" y="92" class="svg-text">+</text>
+      <text x="168" y="172" class="svg-text">−</text>
+      <rect x="240" y="40" width="150" height="80" rx="8" class="mod-teal"/>
+      <text x="315" y="76" text-anchor="middle" class="mod-text" style="font-size:14px;font-weight:600">INA219</text>
+      <text x="252" y="104" class="mod-text">Vin+</text>
+      <text x="378" y="104" class="mod-text" text-anchor="end">Vin−</text>
+      <rect x="470" y="70" width="150" height="110" rx="8" class="box"/>
+      <text x="545" y="110" text-anchor="middle" class="svg-label">Buck converter</text>
+      <text x="545" y="130" text-anchor="middle" class="svg-muted">set to 5.0 V first</text>
+      <text x="478" y="92" class="svg-text">IN+</text>
+      <text x="478" y="172" class="svg-text">IN−</text>
+      <text x="612" y="92" class="svg-text" text-anchor="end">OUT+</text>
+      <text x="612" y="172" class="svg-text" text-anchor="end">OUT−</text>
+      <rect x="700" y="70" width="140" height="110" rx="8" class="pcb"/>
+      <text x="770" y="118" text-anchor="middle" class="pcb-text" style="font-size:14px">ESP32</text>
+      <text x="708" y="92" class="pcb-text">VIN</text>
+      <text x="708" y="172" class="pcb-text">GND</text>
+      <path d="M160 88 H200 V100 H240" class="wire-edge"/><path d="M160 88 H200 V100 H240" class="wire-core" style="stroke: var(--w-bat)"/>
+      <path d="M390 100 H430 V88 H470" class="wire-edge"/><path d="M390 100 H430 V88 H470" class="wire-core" style="stroke: var(--w-bat)"/>
+      <path d="M160 168 H470" class="wire-edge"/><path d="M160 168 H470" class="wire-core" style="stroke: var(--w-gnd)"/>
+      <path d="M620 88 H700" class="wire-edge"/><path d="M620 88 H700" class="wire-core" style="stroke: var(--w-3v3)"/>
+      <path d="M620 168 H700" class="wire-edge"/><path d="M620 168 H700" class="wire-core" style="stroke: var(--w-gnd)"/>
+      <path d="M300 168 V235 H770 V180" class="wire-edge"/><path d="M300 168 V235 H770 V180" class="wire-core" style="stroke: var(--w-gnd)"/>
+      <circle cx="300" cy="168" r="5" class="end" style="fill: var(--w-gnd)"/>
+      <text x="520" y="255" text-anchor="middle" class="svg-muted">one shared ground: battery −, buck IN−, ESP32 GND (the − rail), and the INA219's GND</text>
+    </svg>
+    <figcaption>The INA219 sits in the battery's + wire, so all the current passes through its R100 resistor and gets measured.</figcaption>
+  </figure>
+
+  <ol class="steps">
+    <li><input type="checkbox" id="h-bat-set"><div><b>Set the buck converter to 5.0 V before it touches the ESP32.</b>
+      <p>Connect only the battery to the buck's IN+ and IN−. Set the multimeter to <b>DC volts (20 V range)</b>, red probe on OUT+, black on OUT−. Turn the small brass screw on the blue box slowly until it reads <b>5.0</b> (4.9 to 5.1 is fine). Many need 10 or more turns. Then disconnect the battery.</p></div></li>
+    <li><input type="checkbox" id="h-bat-wire"><div><b>Wire it as in the picture,</b> with the battery out of its holder.
+      <p>Battery + → INA219 <b>Vin+</b> (screw terminal). INA219 <b>Vin−</b> → buck <b>IN+</b>. Battery − → buck <b>IN−</b> <b>and</b> the breadboard's − rail. Leave the buck's OUT wires unconnected for now.</p></div></li>
+    <li><input type="checkbox" id="h-bat-measure"><div><b>Plug the ESP32 into USB, then put the cells in the holder.</b>
+      <p>The Monitor now shows the battery. Set your layout from the table above:</p>
+<pre><code>cells 4
+mah 3000
+[Status] fuel: 13.2 cm, 51% | battery: 15.84 V (3.96 V/cell), 12 mA, 0.19 W, 76%</code></pre>
+      <p>Check the volts with the multimeter across the battery: they should agree within about 0.1 V.</p></div></li>
+    <li><input type="checkbox" id="h-bat-run"><div><b>To run on the battery alone,</b> unplug the USB first, then connect buck <b>OUT+ → ESP32 VIN</b> and <b>OUT− → ESP32 GND</b>.
+      <p><b>Never connect the buck's output while the USB is plugged in.</b> To use the Monitor again, disconnect OUT+ first, then plug in USB.</p></div></li>
+  </ol>
+  <div class="callout"><strong>How it works out the charge</strong>
+    <p>It starts from the voltage per cell: an 18650 is 4.2 V full and 3.0 V empty. Then it counts the current flowing out, the way phones do, and slowly corrects itself from the voltage while the load is light. <b>Time left</b> = charge left ÷ current. Below 20%, the screen marks the battery LOW.</p></div>
+</section>
+
+<!-- 11 -->
+<section class="stage" id="everyday">
+  <div class="stage-head"><span class="stage-no">11</span><h2>Every time after the first setup</h2></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="h-day-hotspot"><div><b>Turn on the phone's hotspot.</b></div></li>
+    <li><input type="checkbox" id="h-day-power"><div><b>Give the health unit power</b> (USB, or the battery through the buck converter). It starts by itself, remembers the tank and battery settings, and joins the hotspot within a few seconds.</div></li>
+    <li><input type="checkbox" id="h-day-main"><div><b>Power the main unit</b> as usual. The two don't depend on each other: either works alone.</div></li>
+  </ol>
+  <p>Upload again only if you change a file (<code>secrets.h</code>, <code>config.h</code> or the code).</p>
+</section>
+
+<!-- 12 -->
+<section class="stage" id="trouble">
+  <div class="stage-head"><span class="stage-no">12</span><h2>When something's wrong</h2></div>
+  <div class="table-box"><table>
+    <thead><tr><th>What happens</th><th>Most likely cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td>The ESP32's red light goes off, or something gets warm, when a wire goes in</td><td>A short: + touching −</td><td><b>Unplug at once.</b> Check VCC and GND on each sensor by their printed labels, and which rail each wire is in</td></tr>
+      <tr><td><span class="mono">INA219 not found</span></td><td>SDA/SCL swapped or loose, or no power to it</td><td>SDA → D21, SCL → D22; push the wires in firmly</td></tr>
+      <tr><td><span class="mono">no echo</span></td><td>Trig/Echo swapped, or nothing flat in front of it</td><td>Trig → D5, Echo → D18; aim at a flat surface 5 cm to 2 m away</td></tr>
+      <tr><td>Fuel % jumps about</td><td>Sound bouncing off the tank's walls, or ripples</td><td>Use a wider tank, keep the sensor in the middle, pointing straight down; wait for the water to settle</td></tr>
+      <tr><td>Fuel says 0% or 100% all the time</td><td>Calibrated the wrong way round, or the sensor moved</td><td>Type <code>reset</code>, then <code>empty</code> and <code>full</code> again</td></tr>
+      <tr><td>Battery % seems wrong</td><td>Wrong <code>cells</code> setting</td><td>Divide the volts by the cells: each cell should read 3.0 to 4.2 V. If not, set <code>cells</code> correctly</td></tr>
+      <tr><td>Battery current reads negative</td><td>Vin+ and Vin− swapped</td><td>Battery + must go to <b>Vin+</b></td></tr>
+      <tr><td><span class="mono">Wi-Fi: not connected</span></td><td>Hotspot off, or a typo in <code>secrets.h</code></td><td>Check both, save, Upload again</td></tr>
+      <tr><td><span class="mono">could not open port</span> when uploading</td><td>A Monitor is still open</td><td>Close it (<kbd>Ctrl</kbd> + <kbd>C</kbd> or the bin icon), Upload again</td></tr>
+    </tbody>
+  </table></div>
+  <p>If none of these fits, paste what the Monitor prints to Claude, with any password replaced by <code>****</code>, or send a photo of the wiring from above.</p>
+</section>
+
+<!-- 13 -->
+<section class="stage" id="safety">
+  <div class="stage-head"><span class="stage-no">13</span><h2>Safety</h2></div>
+  <div class="callout warn"><strong>Never put the ultrasonic sensor on or in a real fuel tank</strong>
+    <p>It isn't sealed or spark-proof, and petrol vapour is explosive. Petrol vapour also changes the speed of sound, so the readings would be wrong anyway. This project uses a demo tank of water.</p></div>
+  <ul>
+    <li><b>Keep water away from the boards.</b> Mount the sensor's board above the rim; wire everything else away from the tank.</li>
+    <li><b>Li-ion cells:</b> use a holder, never short them, don't use dented or warm cells, and charge them only with a proper Li-ion charger. Cells in series slowly drift apart: check each one with the multimeter now and then. If one is far below the others (more than 0.1 V), charge it on its own.</li>
+    <li><b>Buck converter:</b> always set to 5.0 V with a multimeter before connecting the ESP32, and never connect its output while the USB is plugged in.</li>
+    <li><b>INA219 limits:</b> up to 26 V and 3.2 A. Fine for up to 6 cells in series and these small boards; not for a car's starter battery.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<script>
+(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, parent, text) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+
+  // ESP32 pins
+  const left = ["EN","VP","VN","D34","D35","D32","D33","D25","D26","D27","D14","D12","D13","GND","VIN"];
+  const right = ["D23","D22","TX0","RX0","D21","D19","D18","D5","TX2","RX2","D4","D2","D15","GND","3V3"];
+  const used = { D22: 1, D21: 1, D18: 1, D5: 1, GND: 1, "3V3": 1 };
+  const ep = document.getElementById("esppins");
+  const py = (i) => 140 + i * 29;
+  left.forEach((n, i) => {
+    el("circle", { cx: 45, cy: py(i), r: 5, class: "pin-dim" }, ep);
+    el("text", { x: 58, y: py(i) + 4, class: "pcb-dim" }, ep, n);
+  });
+  right.forEach((n, i) => {
+    const on = used[n];
+    el("circle", { cx: 235, cy: py(i), r: 5.5, class: on ? "pin" : "pin-dim" }, ep);
+    el("text", { x: 222, y: py(i) + 4, class: on ? "pcb-text" : "pcb-dim", "text-anchor": "end", "font-weight": on ? 600 : 400 }, ep, n);
+  });
+
+  // Module pins
+  const mp = document.getElementById("modpins");
+  const ina = { VCC: 75, GND: 105, SCL: 135, SDA: 165, "Vin−": 200, "Vin+": 230 };
+  const us = { VCC: 370, Trig: 405, Echo: 440, GND: 475 };
+  for (const [n, y] of Object.entries(ina)) {
+    const later = n.startsWith("Vin");
+    el("circle", { cx: 420, cy: y, r: 5.5, class: later ? "pin-dim" : "pin" }, mp);
+    el("text", { x: 432, y: y + 4, class: "mod-text", opacity: later ? 0.6 : 1 }, mp, later ? n + " (later)" : n);
+  }
+  for (const [n, y] of Object.entries(us)) {
+    el("circle", { cx: 420, cy: y, r: 5.5, class: "pin" }, mp);
+    el("text", { x: 432, y: y + 4, class: "mod-text" }, mp, n);
+  }
+
+  // Wires
+  const W = document.getElementById("wires");
+  const yR = (name) => py(right.indexOf(name));
+  const yGnd = py(13), y3v3 = py(14);
+  const wires = [
+    { c: "--w-3v3", d: `M235 ${y3v3} H302`, ends: [[235, y3v3], [302, y3v3]] },
+    { c: "--w-gnd", d: `M235 ${yGnd} H334`, ends: [[235, yGnd], [334, yGnd]] },
+    { c: "--w-3v3", d: `M302 ${ina.VCC} H420`, ends: [[302, ina.VCC], [420, ina.VCC]] },
+    { c: "--w-gnd", d: `M334 ${ina.GND} H420`, ends: [[334, ina.GND], [420, ina.GND]] },
+    { c: "--w-3v3", d: `M302 ${us.VCC} H420`, ends: [[302, us.VCC], [420, us.VCC]] },
+    { c: "--w-gnd", d: `M334 ${us.GND} H420`, ends: [[334, us.GND], [420, us.GND]] },
+    { c: "--w-scl", d: `M235 ${yR("D22")} H272 V${ina.SCL} H420`, ends: [[235, yR("D22")], [420, ina.SCL]] },
+    { c: "--w-sda", d: `M235 ${yR("D21")} H262 V${ina.SDA} H420`, ends: [[235, yR("D21")], [420, ina.SDA]] },
+    { c: "--w-echo", d: `M235 ${yR("D18")} H266 V${us.Echo} H420`, ends: [[235, yR("D18")], [420, us.Echo]] },
+    { c: "--w-trig", d: `M235 ${yR("D5")} H278 V${us.Trig} H420`, ends: [[235, yR("D5")], [420, us.Trig]] },
+  ];
+  for (const w of wires) {
+    el("path", { d: w.d, class: "wire-edge" }, W);
+    el("path", { d: w.d, class: "wire-core", style: `stroke: var(${w.c})` }, W);
+  }
+  for (const w of wires) for (const [x, y] of w.ends) el("circle", { cx: x, cy: y, r: 4.5, class: "end", style: `fill: var(${w.c})` }, W);
+
+  // Checklist progress, remembered per browser
+  const boxes = Array.from(document.querySelectorAll(".steps input[type=checkbox]"));
+  const KEY = "nr-health-guide";
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+  const text = document.getElementById("progText"), bar = document.getElementById("progBar");
+  function refresh() {
+    let n = 0;
+    boxes.forEach((b) => { b.closest("li").classList.toggle("done", b.checked); if (b.checked) n++; });
+    text.textContent = `${n} of ${boxes.length} steps done`;
+    bar.style.width = (boxes.length ? (100 * n / boxes.length) : 0) + "%";
+  }
+  boxes.forEach((b) => {
+    b.checked = !!saved[b.id];
+    b.setAttribute("aria-label", "Done");
+    b.addEventListener("change", () => {
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      refresh();
+    });
+  });
+  refresh();
+})();
+</script>

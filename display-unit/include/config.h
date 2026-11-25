@@ -22,6 +22,11 @@
 // the main unit hears
 #define CAMERA_UDP_PORT 4210
 #define CAMERA_FRESH_MS 3000
+
+// The main unit's heading and the health unit's readings, on the same port.
+// Older than this and the screen stops showing them.
+#define LOCAL_HEADING_FRESH_MS 2000
+#define HEALTH_FRESH_MS 5000
 #define NARROW_MAX_WIDTH_M 4.0f
 
 // ── Map ─────────────────────────────────────────────────────────────────────

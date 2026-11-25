@@ -47,6 +47,18 @@ void loop() {
   bool fresh = camera.everHeard() && millis() - w.receivedMs < CAMERA_FRESH_MS;
   uiShowCamera(fresh, w.width, w.wide);
 
+  // Straight from the other units on the hotspot
+  uint32_t now = millis();
+  const PositionReading &p = camera.position();
+  uiShowLocalHeading(p.receivedMs && now - p.receivedMs < LOCAL_HEADING_FRESH_MS && p.hasHeading,
+                     p.heading);
+  const FuelReading &f = camera.fuel();
+  uiShowFuel(f.receivedMs && now - f.receivedMs < HEALTH_FRESH_MS, f.ok, f.calibrated, f.percent,
+             f.litres, f.low);
+  const BatteryReading &b = camera.battery();
+  uiShowBattery(b.receivedMs && now - b.receivedMs < HEALTH_FRESH_MS, b.ok, b.volts, b.amps,
+                b.percent, b.minutesLeft, b.low);
+
   uiTick();
   displayLoop();
 

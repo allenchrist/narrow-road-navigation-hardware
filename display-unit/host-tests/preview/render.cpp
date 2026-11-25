@@ -32,7 +32,8 @@ int main(int argc, char **argv) {
   uiShowStatus(false, "Waiting for the main unit to connect"); uiShowCamera(false, 0, false); pump(300); save(std::string(argv[2]) + "/waiting.ppm");
   for (JsonPairConst s : doc.as<JsonObjectConst>()) {
     Fleet f; parseFleet(s.value()["vehicles"], s.value()["vehicleId"] | "", f);
-    uiShowStatus(true, ""); uiShowCamera(true, 3.1f, false); uiShowFleet(f); pump(200);
+    uiShowStatus(true, ""); uiShowCamera(true, 3.1f, false); uiShowFleet(f);
+    uiShowFuel(true, true, true, 62, 3.1f, false); uiShowBattery(true, true, 15.2f, 0.42f, 71, 380, false); pump(200);
     std::string k = s.key().c_str(); for (char &c : k) if (c == '+') c = '_';
     save(std::string(argv[2]) + "/" + k + ".ppm");
   }

@@ -4,6 +4,7 @@
 #include <Preferences.h>
 #include <lvgl.h>
 #include <math.h>
+#include <string.h>
 #include <time.h>
 
 #include <algorithm>
@@ -78,6 +79,9 @@ std::string problem = "Starting";
 bool cameraFresh = false;
 float cameraWidth = 0;
 bool cameraWide = false;
+
+bool localHeadingFresh = false;
+float localHeading = 0;
 bool flashOn = true;
 uint32_t lastFlashMs = 0;
 uint32_t lastClockMs = 0;
@@ -89,7 +93,8 @@ lv_obj_t *mapObj, *overlay, *overlayLabel;
 lv_obj_t *card, *cardIcon, *cardTitle, *cardDetail, *cardNote, *cardScene, *cardSteps;
 lv_obj_t *stepLabels[3];
 lv_obj_t *panel, *compassObj, *headingLabel, *roadLabel, *inRoadTitle, *inRoadLabel,
-    *mountainBox, *mountainTitle, *mountainRoad, *mountainBend, *cameraLabel;
+    *mountainBox, *mountainTitle, *mountainRoad, *mountainBend, *cameraLabel, *fuelLabel,
+    *batteryLabel, *batteryDetail;
 std::vector<lv_obj_t *> panelTitles;
 
 // ── Drawing helpers ─────────────────────────────────────────────────────────
@@ -426,6 +431,20 @@ const char *compassName(float deg) {
   return names[i];
 }
 
+// The panel's heading: straight from the main unit when it's on the hotspot,
+// otherwise the server's direction for this car
+bool panelHeading(float &deg) {
+  if (localHeadingFresh) {
+    deg = localHeading;
+    return true;
+  }
+  if (haveFleet && fleet.own.active && fleet.own.hasPosition) {
+    deg = travelDirection(fleet.own);
+    return true;
+  }
+  return false;
+}
+
 void drawCompass(lv_event_t *e) {
   lv_draw_ctx_t *ctx = lv_event_get_draw_ctx(e);
   lv_area_t a;
@@ -433,8 +452,8 @@ void drawCompass(lv_event_t *e) {
   lv_coord_t cx = (a.x1 + a.x2) / 2, cy = (a.y1 + a.y2) / 2;
   drawCircle(ctx, cx, cy, 30, pal->surface, pal->border, 2);
   drawText(ctx, cx - 10, cy - 30, 20, "N", pal->muted, &lv_font_montserrat_14);
-  bool known = haveFleet && fleet.own.active && fleet.own.hasPosition;
-  if (known) drawArrow(ctx, cx, cy, travelDirection(fleet.own), 19, kOwnColour);
+  float d;
+  if (panelHeading(d)) drawArrow(ctx, cx, cy, d, 19, kOwnColour);
 }
 
 // ── Building widgets ────────────────────────────────────────────────────────
@@ -493,8 +512,8 @@ void refreshPanel() {
   const OwnVehicle &own = fleet.own;
   bool live = haveFleet && own.active && own.hasPosition;
 
-  if (live) {
-    float d = travelDirection(own);
+  float d;
+  if (panelHeading(d)) {
     lv_label_set_text_fmt(headingLabel, "%s %d°", compassName(d), static_cast<int>(lroundf(d)) % 360);
   } else {
     lv_label_set_text(headingLabel, "--");
@@ -783,9 +802,20 @@ void uiBegin() {
   panelTitle("ROAD AHEAD (CAMERA)");
   cameraLabel = label(panel, &lv_font_montserrat_16);
 
+  panelTitle("FUEL \xE2\x80\xA2 BATTERY");
+  fuelLabel = label(panel, &lv_font_montserrat_16);
+  batteryLabel = label(panel, &lv_font_montserrat_16);
+  batteryDetail = label(panel, &lv_font_montserrat_14);
+  for (lv_obj_t *l : {fuelLabel, batteryLabel, batteryDetail}) {
+    lv_obj_set_width(l, LV_PCT(100));
+    lv_label_set_long_mode(l, LV_LABEL_LONG_WRAP);
+  }
+
   applyTheme();
   refreshPanel();
   refreshCamera();
+  uiShowFuel(false, false, false, -1, -1, false);
+  uiShowBattery(false, false, 0, 0, -1, -1, false);
   refreshCard();
   refreshStatus();
 }
@@ -820,6 +850,77 @@ void uiShowCamera(bool fresh, float widthM, bool wide) {
   cameraWidth = widthM;
   cameraWide = wide;
   refreshCamera();
+}
+
+void uiShowLocalHeading(bool fresh, float heading) {
+  bool changed = fresh != localHeadingFresh || (fresh && fabsf(heading - localHeading) >= 1.0f);
+  if (!changed) return;
+  localHeadingFresh = fresh;
+  localHeading = heading;
+  refreshPanel();
+}
+
+namespace {
+
+// Only touch a label when its text or colour actually changes
+void setLabel(lv_obj_t *l, const char *text, uint32_t colour) {
+  if (strcmp(lv_label_get_text(l), text) != 0) lv_label_set_text(l, text);
+  lv_obj_set_style_text_color(l, col(colour), 0);
+}
+
+}  // namespace
+
+void uiShowFuel(bool fresh, bool ok, bool calibrated, float percent, float litres, bool low) {
+  char text[48];
+  uint32_t colour = pal->text;
+  if (!fresh) {
+    snprintf(text, sizeof(text), "Fuel: no reading");
+    colour = pal->muted;
+  } else if (!ok) {
+    snprintf(text, sizeof(text), "Fuel: sensor not reading");
+    colour = kAmber;
+  } else if (!calibrated || percent < 0) {
+    snprintf(text, sizeof(text), "Fuel: set empty and full");
+    colour = pal->muted;
+  } else if (litres >= 0) {
+    snprintf(text, sizeof(text), "Fuel %.0f%% \xE2\x80\xA2 %.1f L%s", percent, litres, low ? " \xE2\x80\xA2 LOW" : "");
+    colour = low ? kRed : kGreen;
+  } else {
+    snprintf(text, sizeof(text), "Fuel %.0f%%%s", percent, low ? " \xE2\x80\xA2 LOW" : "");
+    colour = low ? kRed : kGreen;
+  }
+  setLabel(fuelLabel, text, colour);
+}
+
+void uiShowBattery(bool fresh, bool ok, float volts, float amps, float percent,
+                   float minutesLeft, bool low) {
+  char text[48], detail[64];
+  uint32_t colour = pal->text;
+  detail[0] = '\0';
+  if (!fresh) {
+    snprintf(text, sizeof(text), "Battery: no reading");
+    colour = pal->muted;
+  } else if (!ok) {
+    snprintf(text, sizeof(text), "Battery: not connected");
+    colour = kAmber;
+  } else {
+    snprintf(text, sizeof(text), "Battery %.0f%% \xE2\x80\xA2 %.1f V%s", percent, volts,
+             low ? " \xE2\x80\xA2 LOW" : "");
+    colour = low ? kRed : (percent < 40 ? kAmber : kGreen);
+    if (minutesLeft >= 0) {
+      int m = static_cast<int>(lroundf(minutesLeft));
+      snprintf(detail, sizeof(detail), "%.2f A \xE2\x80\xA2 %dh %02dm left", amps, m / 60, m % 60);
+    } else {
+      snprintf(detail, sizeof(detail), "%.2f A", amps);
+    }
+  }
+  setLabel(batteryLabel, text, colour);
+  setLabel(batteryDetail, detail, pal->muted);
+  if (detail[0]) {
+    lv_obj_clear_flag(batteryDetail, LV_OBJ_FLAG_HIDDEN);
+  } else {
+    lv_obj_add_flag(batteryDetail, LV_OBJ_FLAG_HIDDEN);
+  }
 }
 
 void uiTick() {

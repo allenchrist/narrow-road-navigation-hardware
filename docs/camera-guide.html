@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera Unit Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Same bench-manual layout as the main unit's guide (build-guide.html) */
+:root {
+  --bg: #f6f7f4;
+  --surface: #ffffff;
+  --ink: #17201b;
+  --muted: #5a665f;
+  --line: #d9ded8;
+  --accent: #1d6b48;
+  --accent-soft: #e3f0e8;
+  --warn: #a4410f;
+  --warn-soft: #fcebdd;
+  --code-bg: #eef1ec;
+  --pcb: #1f3d30;
+  --pcb-ink: #e8f2ec;
+  --rail-plus: #f6d8d8;
+  --rail-minus: #d8e1f6;
+  --w-gnd: #222222;
+  --w-3v3: #d92b2b;
+  --w-trig: #f08c00;
+  --w-echo: #8e44ad;
+  --w-sda: #2563eb;
+  --w-scl: #ffffff;
+  --w-bat: #c2410c;
+  --w-edge: #3a4540;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111613; --surface: #182019; --ink: #e5ece7; --muted: #9aa8a0; --line: #2c3730;
+    --accent: #5cc893; --accent-soft: #1d3327; --warn: #f0a070; --warn-soft: #3a2518;
+    --code-bg: #1f2923; --pcb: #234836; --pcb-ink: #e8f2ec;
+    --rail-plus: #4a2626; --rail-minus: #26324a;
+    --w-gnd: #111111; --w-3v3: #ef4b4b; --w-trig: #ffa94d; --w-echo: #b57edc; --w-sda: #5b8cff; --w-scl: #f4f4f4; --w-bat: #fb923c; --w-edge: #8a978f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111613; --surface: #182019; --ink: #e5ece7; --muted: #9aa8a0; --line: #2c3730;
+  --accent: #5cc893; --accent-soft: #1d3327; --warn: #f0a070; --warn-soft: #3a2518;
+  --code-bg: #1f2923; --pcb: #234836; --pcb-ink: #e8f2ec;
+  --rail-plus: #4a2626; --rail-minus: #26324a;
+  --w-gnd: #111111; --w-3v3: #ef4b4b; --w-trig: #ffa94d; --w-echo: #b57edc; --w-sda: #5b8cff; --w-scl: #f4f4f4; --w-bat: #fb923c; --w-edge: #8a978f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; padding-block: 40px 80px; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; font-size: 14px; }
+nav.toc .label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: s -1; }
+nav.toc li { counter-increment: s; }
+nav.toc a { display: flex; gap: 10px; padding: 4px 8px; border-radius: 6px; color: var(--ink); text-decoration: none; }
+nav.toc a::before { content: counter(s); font-family: var(--font-mono); color: var(--muted); min-width: 1.4em; }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--accent-soft); outline: none; }
+nav.toc .progress { margin-top: 16px; font-size: 13px; color: var(--muted); }
+nav.toc .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+nav.toc .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+nav.toc .other { margin-top: 14px; font-size: 13px; }
+
+main { min-width: 0; }
+header.intro { margin-bottom: 40px; }
+header.intro .eyebrow { font-family: var(--font-mono); font-size: 13px; color: var(--accent); letter-spacing: .04em; }
+h1 { font-size: clamp(30px, 5vw, 42px); line-height: 1.15; margin: 8px 0 16px; text-wrap: balance; font-weight: 700; }
+header.intro p { max-width: 65ch; color: var(--muted); font-size: 18px; margin: 0 0 10px; }
+
+section.stage { border-top: 1px solid var(--line); padding-block: 36px 8px; scroll-margin-top: 16px; }
+.stage-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+.stage-no { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 2px 9px; border-radius: 5px; }
+h2 { font-size: 26px; line-height: 1.25; margin: 0; text-wrap: balance; }
+h3 { font-size: 18px; margin: 28px 0 8px; }
+p, li { max-width: 68ch; }
+.time { font-size: 13px; color: var(--muted); }
+a { color: var(--accent); }
+code, kbd, .mono { font-family: var(--font-mono); font-size: .9em; }
+code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+kbd { border: 1px solid var(--line); border-bottom-width: 2px; padding: 0 6px; border-radius: 4px; background: var(--surface); }
+pre { background: var(--code-bg); padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.5; margin: 12px 0; }
+pre code { background: none; padding: 0; }
+
+.callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; max-width: 72ch; }
+.callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+.callout strong:first-child { display: block; margin-bottom: 2px; }
+.callout p { margin: 4px 0; }
+
+.table-box { overflow-x: auto; margin: 14px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; background: var(--code-bg); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-family: var(--font-mono); color: var(--muted); width: 2.5em; font-variant-numeric: tabular-nums; }
+
+.wire { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.wire::before { content: ""; width: 26px; height: 8px; border-radius: 4px; background: var(--c); border: 1.5px solid var(--w-edge); }
+
+.steps { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 10px; counter-reset: st; }
+.steps > li { counter-increment: st; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.steps > li > input { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--accent); cursor: pointer; }
+.steps > li > div { min-width: 0; }
+.steps > li > div > :first-child { margin-top: 0; }
+.steps > li > div > :last-child { margin-bottom: 0; }
+.steps > li.done { opacity: .6; }
+.steps > li.done > div > b:first-child { text-decoration: line-through; }
+
+.figure { margin: 18px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
+.figure svg { display: block; width: 100%; height: auto; min-width: 560px; }
+.figure figcaption, .figcap { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 14px 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.card h4 { margin: 0 0 4px; font-size: 16px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: 2px; }
+.tag.no { background: var(--code-bg); color: var(--muted); }
+
+dl.gloss { display: grid; grid-template-columns: minmax(110px, max-content) minmax(0, 1fr); gap: 6px 18px; margin: 12px 0; }
+dl.gloss dt { font-weight: 600; font-family: var(--font-mono); font-size: 15px; }
+dl.gloss dd { margin: 0; color: var(--ink); }
+
+/* SVG theming */
+.svg-text { fill: var(--ink); font-family: var(--font-mono); font-size: 13px; }
+.svg-muted { fill: var(--muted); font-family: var(--font-body); font-size: 12px; }
+.svg-label { fill: var(--ink); font-family: var(--font-body); font-size: 14px; font-weight: 600; }
+.pcb { fill: var(--pcb); }
+.pcb-text { fill: var(--pcb-ink); font-family: var(--font-mono); font-size: 12px; }
+.pcb-dim { fill: var(--pcb-ink); opacity: .45; font-family: var(--font-mono); font-size: 12px; }
+.box { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.mod-blue { fill: #1e4fa0; }
+.mod-teal { fill: #137a86; }
+.mod-text { fill: #ffffff; font-family: var(--font-mono); font-size: 12px; }
+.pin { fill: #c9a227; stroke: #7a5f10; stroke-width: 1; }
+.pin-dim { fill: #8f9a94; opacity: .5; }
+.wire-edge { fill: none; stroke: var(--w-edge); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.wire-core { fill: none; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+.end { stroke: var(--w-edge); stroke-width: 1.5; }
+.rail-p { fill: var(--rail-plus); }
+.rail-m { fill: var(--rail-minus); }
+.tank { fill: none; stroke: var(--ink); stroke-width: 2; }
+.water { fill: #3b82f6; opacity: .35; }
+.beam { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 5; }
+
+@media (max-width: 860px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 24px 64px; }
+  nav.toc { position: static; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  nav.toc ol { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+@media (max-width: 480px) {
+  dl.gloss { grid-template-columns: minmax(0, 1fr); }
+  dl.gloss dd { margin-bottom: 8px; }
+  h2 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <div class="label">Stages</div>
+  <ol>
+    <li><a href="#start">What you have</a></li>
+    <li><a href="#how">How it measures</a></li>
+    <li><a href="#python">Python on the laptop</a></li>
+    <li><a href="#phone">Set up the phone</a></li>
+    <li><a href="#network">Hotspot and test picture</a></li>
+    <li><a href="#home">Try it at home first</a></li>
+    <li><a href="#mount">Mount the phone</a></li>
+    <li><a href="#calibrate">Calibrate with markers</a></li>
+    <li><a href="#run">Run the measuring</a></li>
+    <li><a href="#main">Check the main unit hears it</a></li>
+    <li><a href="#accuracy">Measure its accuracy</a></li>
+    <li><a href="#everyday">Every time after</a></li>
+    <li><a href="#trouble">When something's wrong</a></li>
+    <li><a href="#limits">Limits and safety</a></li>
+  </ol>
+  <div class="progress"><span id="progText">0 of 0 steps done</span><div class="bar"><i id="progBar"></i></div></div>
+  <div class="other">Other guides: <a href="build-guide.html">main unit</a> · <a href="health-guide.html">health unit</a></div>
+</nav>
+
+<main>
+<header class="intro">
+  <div class="eyebrow">Narrow Road Navigation · camera unit</div>
+  <h1>Measuring road width with your phone's camera</h1>
+  <p>Your phone films the road ahead; a program on the laptop turns the picture into metres and tells the main unit how wide the road is. Nothing to wire and nothing to upload to an ESP32.</p>
+  <p>Tick each step as you finish it; your ticks are remembered in this browser. If a step doesn't turn out as described, stop there and send Claude what the terminal printed, or the picture <code>calibration-check.png</code>.</p>
+</header>
+
+<!-- 0 -->
+<section class="stage" id="start">
+  <div class="stage-head"><span class="stage-no">0</span><h2>What you have, and what each part does</h2></div>
+  <div class="grid2">
+    <div class="card"><h4>Android phone <span class="tag">IP Webcam app</span></h4><p>Films the road and sends the video over Wi-Fi. The same phone can also be the hotspot.</p></div>
+    <div class="card"><h4>Laptop <span class="tag">runs width.py</span></h4><p>Reads the video, finds the two sides of the road in each picture, works out the width in metres and broadcasts it.</p></div>
+    <div class="card"><h4>Main unit <span class="tag no">already done</span></h4><p>Hears each width, places it on the map a few metres ahead of the car, and spots narrow stretches.</p></div>
+    <div class="card"><h4>calibration.json <span class="tag no">made in stage 7</span></h4><p>The camera's only setting: how pixels in the picture map onto metres on the ground.</p></div>
+  </div>
+  <h3>You also need</h3>
+  <ul>
+    <li>A <b>phone holder</b> for the dashboard or windscreen that holds the phone firmly.</li>
+    <li>A <b>tape measure</b> (at least 5 m) and <b>4 markers</b>: stones, bricks, chalk crosses or tape.</li>
+    <li>A <b>phone charger</b> for the car: the camera and hotspot together drain the battery fast.</li>
+    <li>A <b>helper</b> for the drive: someone other than the driver watches the laptop.</li>
+  </ul>
+</section>
+
+<!-- 1 -->
+<section class="stage" id="how">
+  <div class="stage-head"><span class="stage-no">1</span><h2>How it measures</h2></div>
+  <figure class="figure">
+    <svg viewBox="0 0 860 330" role="img" aria-label="The phone sees the road in perspective. On the rows showing the ground 5, 6 and 7 metres ahead, the program starts in the middle of the road and moves left and right until the picture changes from road to wall. The two edge points become metres using the calibration.">
+      <rect x="20" y="20" width="420" height="290" rx="6" fill="#cfd6dc"/>
+      <polygon points="20,310 175,120 285,120 440,310" fill="#5b6168"/>
+      <polygon points="20,310 20,60 175,120" fill="#d9c7a3"/>
+      <polygon points="440,310 440,60 285,120" fill="#d9c7a3"/>
+      <rect x="40" y="150" width="30" height="70" fill="#7a5c3a" opacity=".7"/>
+      <rect x="390" y="140" width="28" height="80" fill="#7a5c3a" opacity=".7"/>
+      <g stroke="#ffd43b" stroke-width="2.5">
+        <line x1="148" y1="152" x2="312" y2="152"/>
+        <line x1="128" y1="176" x2="332" y2="176"/>
+        <line x1="104" y1="205" x2="356" y2="205"/>
+      </g>
+      <g fill="#ff4d4f"><circle cx="148" cy="152" r="5"/><circle cx="312" cy="152" r="5"/><circle cx="128" cy="176" r="5"/><circle cx="332" cy="176" r="5"/><circle cx="104" cy="205" r="5"/><circle cx="356" cy="205" r="5"/></g>
+      <g fill="#40c057"><circle cx="230" cy="152" r="4"/><circle cx="230" cy="176" r="4"/><circle cx="230" cy="205" r="4"/></g>
+      <text x="450" y="157" class="svg-muted">7 m ahead</text>
+      <text x="450" y="181" class="svg-muted">6 m ahead</text>
+      <text x="450" y="210" class="svg-muted">5 m ahead</text>
+      <text x="230" y="300" text-anchor="middle" class="mod-text" style="font-size:13px">what the phone sees</text>
+      <text x="560" y="60" class="svg-label">1. Pick three rows</text>
+      <text x="560" y="78" class="svg-muted">the ground 5, 6 and 7 m ahead</text>
+      <text x="560" y="112" class="svg-label">2. Start in the middle (green)</text>
+      <text x="560" y="130" class="svg-muted">that patch is "road"</text>
+      <text x="560" y="164" class="svg-label">3. Scan left and right</text>
+      <text x="560" y="182" class="svg-muted">until it stops looking like road (red)</text>
+      <text x="560" y="216" class="svg-label">4. Pixels → metres</text>
+      <text x="560" y="234" class="svg-muted">using calibration.json</text>
+      <text x="560" y="268" class="svg-label">5. Middle of the three rows</text>
+      <text x="560" y="286" class="svg-muted">then the middle of the last 5 pictures</text>
+    </svg>
+    <figcaption>If a scan reaches the edge of the picture without finding a side, the road is wider than the camera can see, so it reports "wide": certainly not narrow.</figcaption>
+  </figure>
+  <p>Five times a second the laptop broadcasts on the hotspot, exactly like the other units:</p>
+<pre><code>{"type":"width","width":3.2,"wide":false,"distance":6.0,"confidence":1.0}</code></pre>
+  <p>The main unit places each reading 6 m ahead of the car on the map. When readings say <b>4 m or less along at least 25 m</b> (70% of the readings), it sends that stretch to the server as a <b>narrow road suggestion</b>, and the admin approves or rejects it on the website as usual.</p>
+  <dl class="gloss">
+    <dt>Calibration</dt><dd>Teaching the program how big things are: you put 4 markers a known distance apart and click them in the picture.</dd>
+    <dt>Homography</dt><dd>The maths that turns a pixel into a point on flat ground. calibration.json holds it.</dd>
+    <dt>Confidence</dt><dd>0 to 1: how many of the three rows found both sides. 1.0 means all three agreed.</dd>
+    <dt>Wide</dt><dd>At least one side is outside the picture: wider than the camera can see.</dd>
+  </dl>
+</section>
+
+<!-- 2 -->
+<section class="stage" id="python">
+  <div class="stage-head"><span class="stage-no">2</span><h2>Python on the laptop</h2><span class="time">5 minutes, once</span></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="c-py-check"><div><b>Check Python.</b> In VS Code's terminal type <code>python --version</code>. It must say <b>3.10 or newer</b> (yours has 3.13).</div></li>
+    <li><input type="checkbox" id="c-py-folder"><div><b>Go to the camera folder:</b>
+<pre><code>cd D:\allen\narrow-road-hardware\narrow-road-hardware\camera-unit\python</code></pre>
+      <p>Every camera command in this guide runs from this folder.</p></div></li>
+    <li><input type="checkbox" id="c-py-install"><div><b>Install the two libraries</b> (OpenCV for pictures, numpy for maths):
+<pre><code>pip install -r requirements.txt</code></pre>
+      <p>Yours are already installed (OpenCV 4.12, numpy 2.2); running it again does no harm.</p></div></li>
+    <li><input type="checkbox" id="c-py-test"><div><b>Run the built-in test.</b>
+<pre><code>python tests/test_width.py</code></pre>
+      <p>It draws pretend lanes of 2.5 to 6 m and measures them. It should end with <span class="mono">All passed</span>, each lane within about 10 cm.</p></div></li>
+  </ol>
+</section>
+
+<!-- 3 -->
+<section class="stage" id="phone">
+  <div class="stage-head"><span class="stage-no">3</span><h2>Set up the phone</h2><span class="time">5 minutes</span></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="c-ph-install"><div><b>Install "IP Webcam"</b> from the Play Store (by Pavel Khlebovich, free). An iPhone can use <b>DroidCam</b> instead: the address ends in <code>:4747/video</code>.</div></li>
+    <li><input type="checkbox" id="c-ph-res"><div><b>Set the picture size.</b> Open the app → <b>Video preferences</b> → <b>Video resolution</b> → <b>640×480</b>.
+      <p>The program shrinks every picture to 320×240 anyway, so bigger is no better, just slower over Wi-Fi.</p></div></li>
+    <li><input type="checkbox" id="c-ph-orient"><div><b>Landscape.</b> Video preferences → <b>Video orientation</b> → <b>Landscape</b>. The phone will lie sideways in its holder.</div></li>
+    <li><input type="checkbox" id="c-ph-start"><div><b>Scroll to the bottom and tap "Start server".</b>
+      <p>The camera picture appears with an address at the bottom, such as <code>http://10.40.78.1:8080</code>. Write it down: it's <b>YOUR-PHONE</b> in the commands below.</p></div></li>
+  </ol>
+  <div class="callout"><strong>Keep the screen from switching off</strong>
+    <p>In IP Webcam's <b>Power management</b>, turn on "Prevent phone from going to sleep". Otherwise the video stops when the screen turns off.</p></div>
+</section>
+
+<!-- 4 -->
+<section class="stage" id="network">
+  <div class="stage-head"><span class="stage-no">4</span><h2>Hotspot and a test picture</h2></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="c-net-hotspot"><div><b>Turn on the phone's hotspot</b>, the same one the main unit uses.</div></li>
+    <li><input type="checkbox" id="c-net-laptop"><div><b>Connect the laptop to that hotspot.</b>
+      <p>This matters: the laptop must be on the <b>same hotspot</b> as the ESP32s, or the widths never reach them. Your home Wi-Fi won't work for this.</p></div></li>
+    <li><input type="checkbox" id="c-net-chrome"><div><b>Open YOUR-PHONE's address in Chrome</b> on the laptop, for example <code>http://10.40.78.1:8080</code>. IP Webcam's page shows the live picture. If it does, the laptop can see the phone.
+      <p>If the address changed after you turned on the hotspot, use the new one the app shows.</p></div></li>
+    <li><input type="checkbox" id="c-net-firewall"><div><b>The first time you run a camera command,</b> Windows may ask whether Python can use the network. Tick <b>Private networks</b> and click <b>Allow</b>.</div></li>
+  </ol>
+</section>
+
+<!-- 5 -->
+<section class="stage" id="home">
+  <div class="stage-head"><span class="stage-no">5</span><h2>Try it at home first</h2><span class="time">15 minutes, optional</span></div>
+  <p>A corridor, a passage between two walls, or a driveway works as a small "road". Because it's smaller, use a smaller marker rectangle and measure closer:</p>
+  <ol class="steps">
+    <li><input type="checkbox" id="c-home-place"><div><b>Hold the phone about 1 m high,</b> on a stack of books or a tripod, looking along the corridor and slightly down.</div></li>
+    <li><input type="checkbox" id="c-home-markers"><div><b>Put 4 markers on the floor:</b> 1 m apart side to side, at 2 m and 4 m from the phone, centred in front of it.</div></li>
+    <li><input type="checkbox" id="c-home-cal"><div><b>Calibrate</b> for that rectangle (1 m wide, from 2 to 4 m):
+<pre><code>python calibrate.py --source http://YOUR-PHONE:8080/video --rect 1,2,4 --out home.json</code></pre>
+      <p>Click the markers as in stage 7, then press <kbd>Enter</kbd>.</p></div></li>
+    <li><input type="checkbox" id="c-home-run"><div><b>Measure 2.5 to 3.5 m away:</b>
+<pre><code>python width.py --source http://YOUR-PHONE:8080/video --calibration home.json --distances 2.5,3,3.5</code></pre>
+      <p>Compare the number with the corridor's real width from the tape measure. Press <kbd>q</kbd> in the window to stop.</p></div></li>
+  </ol>
+  <p>This uses its own file, <code>home.json</code>, so it doesn't spoil the car's calibration later.</p>
+</section>
+
+<!-- 6 -->
+<section class="stage" id="mount">
+  <div class="stage-head"><span class="stage-no">6</span><h2>Mount the phone in the car</h2></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="c-mt-centre"><div><b>Centred, sideways, firm.</b> In the holder, in the middle of the windscreen or dashboard, so the camera is in line with the middle of the car.</div></li>
+    <li><input type="checkbox" id="c-mt-aim"><div><b>Looking straight ahead and slightly down.</b> On IP Webcam's screen, the road 4 to 8 m ahead should fill the <b>lower half</b> of the picture, and the bonnet should only just show, if at all.</div></li>
+    <li><input type="checkbox" id="c-mt-clean"><div><b>Wipe the windscreen</b> in front of the lens, and keep the driver's view clear.</div></li>
+  </ol>
+  <div class="callout warn"><strong>Once calibrated, it mustn't move</strong>
+    <p>Even a small knock changes which pixel is 6 m ahead. If the phone moves, calibrate again (stage 7). A mark on the holder helps you put it back in the same place.</p></div>
+</section>
+
+<!-- 7 -->
+<section class="stage" id="calibrate">
+  <div class="stage-head"><span class="stage-no">7</span><h2>Calibrate with markers</h2><span class="time">15 minutes, once</span></div>
+  <figure class="figure">
+    <svg viewBox="0 0 700 330" role="img" aria-label="Top view: four markers form a rectangle 2 metres wide, from 4 to 8 metres in front of the camera, centred on the car">
+      <rect x="290" y="250" width="120" height="70" rx="12" class="box"/>
+      <text x="350" y="290" text-anchor="middle" class="svg-label">car</text>
+      <circle cx="350" cy="252" r="6" fill="var(--accent)"/>
+      <text x="362" y="246" class="svg-muted">phone</text>
+      <line x1="350" y1="250" x2="350" y2="30" class="beam"/>
+      <rect x="290" y="40" width="120" height="120" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/>
+      <g class="svg-text" font-weight="600">
+        <text x="270" y="166" text-anchor="end">1 near-left</text>
+        <text x="430" y="166">2 near-right</text>
+        <text x="430" y="44">3 far-right</text>
+        <text x="270" y="44" text-anchor="end">4 far-left</text>
+      </g>
+      <g fill="#ff4d4f"><circle cx="290" cy="160" r="7"/><circle cx="410" cy="160" r="7"/><circle cx="410" cy="40" r="7"/><circle cx="290" cy="40" r="7"/></g>
+      <line x1="290" y1="185" x2="410" y2="185" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="350" y="202" text-anchor="middle" class="svg-muted">2 m</text>
+      <line x1="560" y1="250" x2="560" y2="160" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="570" y="210" class="svg-muted">4 m to the near pair</text>
+      <line x1="620" y1="250" x2="620" y2="40" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="630" y="120" class="svg-muted">8 m to the far pair</text>
+      <text x="80" y="290" class="svg-muted">Measure along the ground</text>
+      <text x="80" y="306" class="svg-muted">from directly below the phone</text>
+    </svg>
+    <figcaption>Seen from above. The numbers are the order you click them in.</figcaption>
+  </figure>
+  <ol class="steps">
+    <li><input type="checkbox" id="c-cal-place"><div><b>Park on flat, open ground</b> (an empty car park, a quiet road) and place the 4 markers as in the picture.
+      <p>Find the point on the ground directly under the phone. Measure 4 m and 8 m straight ahead from it, along the car's centre line. At each distance, put one marker 1 m to the left and one 1 m to the right. Markers that stand out from the ground (white on dark tarmac) are easiest to click.</p></div></li>
+    <li><input type="checkbox" id="c-cal-run"><div><b>Run the calibration</b> from the <code>camera-unit\python</code> folder:
+<pre><code>python calibrate.py --source http://YOUR-PHONE:8080/video</code></pre></div></li>
+    <li><input type="checkbox" id="c-cal-click"><div><b>Click the 4 markers in order:</b> near-left, near-right, far-right, far-left. The window says which one is next and puts a red cross on each. Made a mistake? Press <kbd>r</kbd> to start again.</div></li>
+    <li><input type="checkbox" id="c-cal-save"><div><b>Press <kbd>Enter</kbd>.</b> It prints:
+<pre><code>Saved calibration.json
+...
+On this picture: more than 5.40 m wide
+Saved calibration-check.png with the measurement marked</code></pre>
+      <p>The last lines are its first measurement, on the calibration picture itself. Open <code>calibration-check.png</code>: red dots should sit on the sides of the road.</p></div></li>
+  </ol>
+  <p class="figcap">Ignore the line about <code>CAM_IMAGE_TO_GROUND</code>: that's for an ESP32-CAM, not the phone.</p>
+</section>
+
+<!-- 8 -->
+<section class="stage" id="run">
+  <div class="stage-head"><span class="stage-no">8</span><h2>Run the measuring</h2></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="c-run-start"><div><b>Start it:</b>
+<pre><code>python width.py --source http://YOUR-PHONE:8080/video</code></pre>
+      <p>It prints <span class="mono">Measuring; sending to &lt;broadcast&gt;:4210</span>, then a line every second:</p>
+<pre><code>3.12 m  confidence 1.00  NARROW
+>6.40 m  confidence 0.67  wide
+no reading: is the road 5-7 m ahead in view?</code></pre></div></li>
+    <li><input type="checkbox" id="c-run-window"><div><b>Read the window.</b> It shows the picture with:
+      <ul>
+        <li>a <b>green dot</b>: the middle of the road, where each scan starts</li>
+        <li><b>red dots</b>: the sides it found</li>
+        <li><b>orange dots</b>: the scan reached the edge of the picture (road wider than the view)</li>
+        <li>the width at the top: <b>amber</b> when 4 m or less (narrow), green otherwise</li>
+      </ul></div></li>
+    <li><input type="checkbox" id="c-run-keys"><div><b>Keys:</b> <kbd>s</kbd> saves the current picture as <code>road-….png</code> (useful for your report and for asking Claude about a bad reading); <kbd>q</kbd> stops.</div></li>
+  </ol>
+  <div class="callout"><strong>While driving, no window</strong>
+    <p>Add <code>--no-window</code> to save the laptop's battery once you trust it: <code>python width.py --source http://YOUR-PHONE:8080/video --no-window</code>. Press <kbd>Ctrl</kbd> + <kbd>C</kbd> to stop.</p></div>
+</section>
+
+<!-- 9 -->
+<section class="stage" id="main">
+  <div class="stage-head"><span class="stage-no">9</span><h2>Check the main unit hears it</h2></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="c-main-monitor"><div><b>Power the main unit</b> and open its Monitor (PlatformIO → main-unit → esp32dev → Monitor). Its status line now ends with:
+<pre><code>[Status] server: connected VEHICLE_009 | GPS: fix, 8 sats ... | camera: 3.1 m, 0s ago</code></pre>
+      <p><code>&gt;6.4 m</code> means wide. If there's no <span class="mono">camera:</span> part, the laptop isn't on the same hotspot.</p></div></li>
+    <li><input type="checkbox" id="c-main-narrow"><div><b>A narrow stretch found</b> while driving shows as:
+<pre><code>[Narrow] Found a narrow road: 3.2 m wide along 31 m
+[Server] Narrow road suggested; review it on the admin page</code></pre>
+      <p>Open the website's admin page to approve or reject it.</p></div></li>
+  </ol>
+  <div class="callout"><strong>It needs a GPS fix</strong>
+    <p>The main unit only places widths on the map while its GPS has a fix. Indoors, the camera part still prints, but no suggestions are made.</p></div>
+</section>
+
+<!-- 10 -->
+<section class="stage" id="accuracy">
+  <div class="stage-head"><span class="stage-no">10</span><h2>Measure its accuracy (for your report)</h2></div>
+  <p>Stop in 10 to 15 different lanes. In each, measure the real width with the tape, at about 6 m in front of the car, and write down what the camera says (press <kbd>s</kbd> to keep the picture).</p>
+  <div class="table-box"><table>
+    <thead><tr><th>#</th><th>Place</th><th>Tape (m)</th><th>Camera (m)</th><th>Error (m)</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>e.g. lane behind college</td><td class="mono">3.10</td><td class="mono">3.02</td><td class="mono">−0.08</td></tr>
+      <tr><td class="num">2</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td class="num">3</td><td></td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table></div>
+  <p><b>Average error</b> = the average of the error column, ignoring minus signs. "Within 15 cm on 12 of 15 lanes" is the kind of result to report. Note where it went wrong (shadows, parked bikes, painted lines): that's useful too.</p>
+</section>
+
+<!-- 11 -->
+<section class="stage" id="everyday">
+  <div class="stage-head"><span class="stage-no">11</span><h2>Every time after the first setup</h2></div>
+  <ol class="steps">
+    <li><input type="checkbox" id="c-day-hotspot"><div><b>Phone:</b> hotspot on, phone in its holder in the same place, IP Webcam → <b>Start server</b>.</div></li>
+    <li><input type="checkbox" id="c-day-laptop"><div><b>Laptop:</b> join the hotspot, then in VS Code's terminal:
+<pre><code>cd D:\allen\narrow-road-hardware\narrow-road-hardware\camera-unit\python
+python width.py --source http://YOUR-PHONE:8080/video</code></pre></div></li>
+    <li><input type="checkbox" id="c-day-main"><div><b>Main unit:</b> give it power. It hears the camera within a second.</div></li>
+  </ol>
+  <p>No calibration again unless the phone's position changed.</p>
+</section>
+
+<!-- 12 -->
+<section class="stage" id="trouble">
+  <div class="stage-head"><span class="stage-no">12</span><h2>When something's wrong</h2></div>
+  <div class="table-box"><table>
+    <thead><tr><th>What happens</th><th>Most likely cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mono">Can't open http://… yet; will keep trying</span></td><td>Wrong address, IP Webcam not started, or the laptop is on a different Wi-Fi</td><td>Check the address in the app, tap Start server, join the hotspot. Test the address in Chrome first</td></tr>
+      <tr><td><span class="mono">No calibration.json: run calibrate.py first</span></td><td>Not calibrated yet, or running from the wrong folder</td><td><code>cd</code> into <code>camera-unit\python</code>; do stage 7</td></tr>
+      <tr><td><span class="mono">Warning: camera gives 1280x720 but calibration is 320x240</span></td><td>The phone's picture size changed after calibrating</td><td>Set IP Webcam to 640×480 again, or calibrate again with the new size</td></tr>
+      <tr><td><span class="mono">no reading</span> all the time</td><td>The road 5–7 m ahead isn't in view</td><td>Tilt the phone down a little, then calibrate again</td></tr>
+      <tr><td>Width far too small</td><td>A shadow, a parked vehicle, a person, or a painted line looks like the road's side</td><td>Normal now and then: the main unit needs 25 m of narrow readings, and the admin reviews every suggestion</td></tr>
+      <tr><td>Every width off by the same amount</td><td>Markers measured wrongly, or the phone moved</td><td>Calibrate again, measuring carefully from directly below the phone</td></tr>
+      <tr><td>Main unit shows no <span class="mono">camera:</span></td><td>Laptop not on the same hotspot, or Windows blocked Python</td><td>Join the hotspot; allow Python on Private networks in Windows Firewall</td></tr>
+      <tr><td>Video freezes</td><td>The phone's screen switched off</td><td>IP Webcam → Power management → Prevent phone from going to sleep</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 13 -->
+<section class="stage" id="limits">
+  <div class="stage-head"><span class="stage-no">13</span><h2>Limits and safety</h2></div>
+  <div class="callout warn"><strong>The driver never touches the laptop or phone</strong>
+    <p>A passenger watches the readings. Set everything up before you drive, and mount the phone where it doesn't block the driver's view.</p></div>
+  <h3>What it does well, and where it struggles</h3>
+  <div class="table-box"><table>
+    <thead><tr><th>Situation</th><th>How it does</th></tr></thead>
+    <tbody>
+      <tr><td>Narrow lanes between walls or buildings (the main use)</td><td>Good: within about 10 cm in tests</td></tr>
+      <tr><td>A tree shadow across part of the road</td><td>Good: it uses the middle of three rows, so one shadowed row doesn't matter</td></tr>
+      <tr><td>Wide open roads</td><td>Says "wide", which is right: they're not narrow</td></tr>
+      <tr><td><b>Wide roads with painted white lines</b></td><td><b>Weak:</b> it can take the line for the road's side and read too narrow (a 7 m road read as 4.4 to 5.2 m in tests). The main unit's 25 m rule and the admin review catch most of these</td></tr>
+      <tr><td>Parked vehicles, people, animals in the lane</td><td>Reads too narrow while they're in view</td></tr>
+      <tr><td>Night, heavy rain, fog, glare from a low sun</td><td>Unreliable: use it in daylight</td></tr>
+      <tr><td>A lane edged by open ground the same colour as the road</td><td>Hard to see the side: may read wide</td></tr>
+    </tbody>
+  </table></div>
+  <p>These are worth stating honestly in your report, next to your accuracy table.</p>
+</section>
+</main>
+</div>
+
+<script>
+(function () {
+    // Checklist progress, remembered per browser
+  const boxes = Array.from(document.querySelectorAll(".steps input[type=checkbox]"));
+  const KEY = "nr-camera-guide";
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+  const text = document.getElementById("progText"), bar = document.getElementById("progBar");
+  function refresh() {
+    let n = 0;
+    boxes.forEach((b) => { b.closest("li").classList.toggle("done", b.checked); if (b.checked) n++; });
+    text.textContent = `${n} of ${boxes.length} steps done`;
+    bar.style.width = (boxes.length ? (100 * n / boxes.length) : 0) + "%";
+  }
+  boxes.forEach((b) => {
+    b.checked = !!saved[b.id];
+    b.setAttribute("aria-label", "Done");
+    b.addEventListener("change", () => {
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      refresh();
+    });
+  });
+  refresh();
+})();
+</script>
