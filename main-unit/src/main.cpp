@@ -10,6 +10,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WiFiUdp.h>
 #include <math.h>
 
 #include <mutex>
@@ -42,7 +43,9 @@ NarrowDetector detector([] {
 uint32_t lastTelemetryMs = 0;
 uint32_t lastHeadingMs = 0;
 uint32_t lastStatusMs = 0;
+uint32_t lastBroadcastMs = 0;
 float lastSentHeading = -1000;
+WiFiUDP localUdp;
 
 // ── Server work in the background ───────────────────────────────────────────
 // Logging in can wait up to a minute while the free Render server wakes up.
@@ -231,6 +234,23 @@ void sendTelemetry() {
                       t.accuracy, millis());
 }
 
+// Position and heading for the car screen, on the hotspot only (the server
+// gets its telemetry separately, unchanged)
+void broadcastPosition() {
+  if (WiFi.status() != WL_CONNECTED) return;
+  bool fix = gps.hasFix(GPS_MAX_AGE_MS);
+  char msg[200];
+  snprintf(msg, sizeof(msg),
+           "{\"type\":\"position\",\"fix\":%s,\"lat\":%.7f,\"lon\":%.7f,\"speed\":%.2f,"
+           "\"heading\":%.1f,\"hasHeading\":%s,\"sats\":%u}",
+           fix ? "true" : "false", fix ? gps.lat() : 0.0, fix ? gps.lon() : 0.0,
+           fix ? gps.speedMps() : 0.0f, currentHeading(), hasHeading() ? "true" : "false",
+           gps.satellites());
+  localUdp.beginPacket(WiFi.broadcastIP(), CAMERA_UDP_PORT);
+  localUdp.write(reinterpret_cast<const uint8_t *>(msg), strlen(msg));
+  localUdp.endPacket();
+}
+
 void printStatus() {
   if (imu.calibrating()) return;  // keep the screen for the calibration messages
   Serial.printf("[Status] server: %s %s | GPS: %s, %u sats, %u chars | IMU: %s %s",
@@ -287,6 +307,11 @@ void loop() {
   if (now - lastTelemetryMs >= TELEMETRY_INTERVAL_MS) {
     lastTelemetryMs = now;
     sendTelemetry();
+  }
+
+  if (now - lastBroadcastMs >= POSITION_BROADCAST_MS) {
+    lastBroadcastMs = now;
+    broadcastPosition();
   }
 
   // Between packets, a turn is sent straight away so the car on the map turns

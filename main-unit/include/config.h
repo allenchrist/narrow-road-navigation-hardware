@@ -66,6 +66,11 @@
 // The camera unit broadcasts road widths on the hotspot to this UDP port
 #define CAMERA_UDP_PORT 4210
 
+// The main unit also broadcasts its position and heading on that port, for
+// the car screen (5 times a second). This is only on the hotspot: what goes
+// to the server doesn't change.
+#define POSITION_BROADCAST_MS 200
+
 // ── Finding narrow roads from camera widths ─────────────────────────────────
 // The same rules the server's findNarrowRoads.js tool uses
 #define NARROW_MAX_WIDTH_M 4.0f       // narrow: 4 m or less between the sides
